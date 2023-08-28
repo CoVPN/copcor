@@ -1,0 +1,12 @@
+Package: copcor
+LazyLoad: yes
+LazyData: yes
+Version: 2023.8-27
+Title: Correlates of Protection and Correlates of Risk Functions
+Authors@R: c(person("Youyi", "Fong", role = "cre", email = "youyifong@gmail.com"), person("Yiwen", "He", role = "aut", email = "ylu2@scharp.org"), person("Chenchen", "Yu", role = "aut", email = "cyu@scharp.org"), person("Bhavesh", "Borate", role = "aut", email = "bborate@scharp.org"), person("Peter", "Gilbert", role = "aut", email = "pgilbert@fredhutch.org"))
+Depends: R (>= 3.6), kyotil
+Imports: methods
+Suggests: RUnit, R.rsp, survival
+Description: Functions used in the study of correlates of protection and correlates of risk.
+VignetteBuilder: R.rsp
+License: GPL (>= 2)

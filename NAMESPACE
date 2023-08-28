@@ -1,0 +1,13 @@
+
+export(cove.boost.collapse.strata, marker.name.to.assay, draw.x.axis.cor, get.xlim)
+
+importFrom(kyotil, '%.%', contain, myprint)
+
+
+import(stats)
+import(utils)
+import(methods)
+import(graphics)
+import(grDevices)
+import(parallel)
+
