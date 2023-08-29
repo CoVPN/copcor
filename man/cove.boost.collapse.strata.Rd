@@ -13,8 +13,7 @@ cove.boost.collapse.strata (dat.b, n.demo)
 }
 \arguments{
 
-  \item{dat.b}{
-    %%     ~~Describe \code{x} here~~
+  \item{dat.b}{data frame
     }
   \item{n.demo}{
     number of demographics strata, e.g. 6 for COVE correlates

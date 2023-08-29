@@ -132,22 +132,23 @@ coxpred = 1 - exp(-predict(fit, newdata=newdata, type="expected"))
 
 plot(cif.2, coxpred)
 
-## results match those from riskRegression_2022.07.13 when weights are all 1
-#library(riskRegression)
-#fit2 <- CSC(list(Hist(time,status)~sex, Hist(time,status)~age), data=lung1, surv.type="hazard",
-#cause=1)
-#r2=c(predictRisk(fit2,cause=1,product.limit=F,newdata=lung1,times=t0))
-#head(cbind(cif, r2))
+\donttest{
+# results match those from riskRegression_2022.07.13 when weights are all 1
+library(riskRegression)
+fit2 <- CSC(list(Hist(time,status)~sex, Hist(time,status)~age), data=lung1, surv.type="hazard",
+cause=1)
+r2=c(predictRisk(fit2,cause=1,product.limit=FALSE,newdata=lung1,times=t0))
+head(cbind(cif, r2))
 
-## pcr can produce cif that is greater than 1, especially when the covariates for the overall 
-## failure model differs from the covariates for the cause-specific model
-## because the survival prob for the overall failure for a subject can be arbitrarily high
-#cif.1=pcr(Surv(time, status.1) ~ sex, Surv(time, status.a) ~ age, lung1, t0)
-##
-#fit3 <- CSC(list(Hist(time,status)~sex, Hist(time,status)~age), data=lung1, surv.type="surv",
-# cause=1)
-#r3=c(predictRisk(fit3,cause=1,product.limit=F,newdata=lung1,times=t0))
-
+# pcr can produce cif that is greater than 1, especially when the covariates for the overall 
+# failure model differs from the covariates for the cause-specific model
+# because the survival prob for the overall failure for a subject can be arbitrarily high
+cif.1=pcr(Surv(time, status.1) ~ sex, Surv(time, status.a) ~ age, lung1, t0)
+#
+fit3 <- CSC(list(Hist(time,status)~sex, Hist(time,status)~age), data=lung1, surv.type="surv",
+ cause=1)
+r3=c(predictRisk(fit3,cause=1,product.limit=F,newdata=lung1,times=t0))
+}
 
 # dealing with weights
 lung1$wt=c(rep(2,50), rep(1, nrow(lung1)-50))
@@ -162,12 +163,13 @@ form  =Surv(time, status.1) ~ age
 form.a=Surv(time, status.a) ~ age
 cif=predictCompetingRisk(form, form.a, lung1, t0, newdata=lung1, weights=lung1$wt, stype=2,ctype=2)
 
-## results match those from riskRegression_2022.07.13 when weights are all 1
-#library(riskRegression)
-#fit2 <- CSC(Hist(time,status)~age, data=lung1, surv.type="survival",cause=1)
-#r2=c(predictRisk(fit2,cause=1,product.limit=F,newdata=lung1,times=t0))
-#head(cbind(cif, r2))
-
+\donttest{
+# results match those from riskRegression_2022.07.13 when weights are all 1
+library(riskRegression)
+fit2 <- CSC(Hist(time,status)~age, data=lung1, surv.type="survival",cause=1)
+r2=c(predictRisk(fit2,cause=1,product.limit=FALSE,newdata=lung1,times=t0))
+head(cbind(cif, r2))
+}
 
 # more validation code 
 
@@ -195,18 +197,21 @@ cif # 0.01754386
 # when H is small but not close when H is large
 form  =Surv(time, status.1) ~ age
 form.a=Surv(time, status.a) ~ age
+
+oldpar <- par(no.readonly = TRUE)    # code line i
+on.exit(par(oldpar))            # code line i + 1
 par(mfrow=c(1,2))
 for (t0 in c(12,1000)) {
     fit=coxph(form, lung1, weights=lung1$wt)
     lung2=lung1; lung2$time=t0
     r=predict(fit, type="expected", newdata=lung2)
-    print(head(basehaz(fit, centered=TRUE)))
+    message(head(basehaz(fit, centered=TRUE)))
     cif=predictCompetingRisk(form, form.a, lung1, t0, newdata=lung1, weights=lung1$wt, stype=2, 
         ctype=2)
     plot(cif, 1-exp(-r), xlab="Cumulative incidence function", 
         ylab="Expected number of events from predict.coxph", main=paste0("t0: ", t0))
     abline(0,1)
-    print(head(cbind(cif, "1-exp(-r)"=1-exp(-r))))
+    message(head(cbind(cif, "1-exp(-r)"=1-exp(-r))))
 }
 
 

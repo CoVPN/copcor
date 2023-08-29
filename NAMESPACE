@@ -1,7 +1,23 @@
+export(draw.x.axis.cor, report.assay.values, get.xlim, get.marker.histogram)
 
-export(cove.boost.collapse.strata, marker.name.to.assay, draw.x.axis.cor, get.xlim)
+export(marker.name.to.assay, make.case.count.marker.availability.table)
 
-importFrom(kyotil, '%.%', contain, myprint)
+export(cove.boost.collapse.strata, add.trichotomized.markers)
+
+export(get.bootstrap.data.cor, bootstrap.cove.boost.2, bootstrap.cove.boost)
+
+export(marginalized.risk.svycoxph.boot)
+
+export(pcr2, pcr, predictCompetingRisk2, predictCompetingRisk)
+
+
+importFrom(kyotil, '%.%', contain, myprint, last)
+importFrom(survey, svycoxph, twophase)
+importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold)
+importFrom(Hmisc, wtd.quantile)
+importFrom(assertthat, assert_that)
+importFrom(survival, coxph)
+importFrom(plotrix, weighted.hist)
 
 
 import(stats)
@@ -10,4 +26,7 @@ import(methods)
 import(graphics)
 import(grDevices)
 import(parallel)
+
+
+
 
