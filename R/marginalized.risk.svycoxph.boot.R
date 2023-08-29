@@ -63,13 +63,13 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   fc.2=function(data.ph2, form.0, in.boot=FALSE){
     # This is no longer necessary b/c pcr2 is updated to handle the situation when there are no competing events
-    # if (is.list(form.0)) 
+    # if (comp.risk) 
     ##    The following is not enough to ensure there are no competing events b/c subsets of datasets are used in pcr2
     #   if(all(model.frame(form.0[[2]], data.ph2)[[1]][,2]==0)) 
     #     # if there are no competing events, drop competing risk formula
     #     form.0 = form.0[[1]]
     # 
-    if (is.list(form.0)) {
+    if (comp.risk) {
       sapply(ss, function(x) {
         if (verbose>=2) myprint(x)
         newdata=data.ph2[data.ph2[[marker.name]]>=x, ]
@@ -88,7 +88,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   f2=as.formula(paste0("~.+",marker.name, if(!is.null(additional.terms)) "+"%.%additional.terms))
   
-  if (is.list(form.0)) {
+  if (comp.risk) {
     f1=lapply(form.0, function(x) update(x, f2))
   } else {
     f1=update(form.0, f2)        
