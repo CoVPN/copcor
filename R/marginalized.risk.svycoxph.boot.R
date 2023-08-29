@@ -17,18 +17,18 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   if (TRIAL %in% c("janssen_partA_VL") & is.null(variant)) stop("Variant needs to be specified for janssen_partA_VL")
     
   
-  data.ph2=data[data$ph2==1, ]
+  data.ph2=subset(data, data$ph2==1)
   
   # used in both point est and bootstrap
   # many variables are not passed but defined in the scope of marginalized.risk.svycoxph.boot
   fc.1=function(data.ph2, data, f1, categorical.s, n.dean=FALSE, in.boot=FALSE){
     # This is no longer necessary b/c pcr2 is updated to handle the situation when there are no competing events
-    # if (is.list(f1)) 
+    # if (comp.risk) 
     #   if(all(model.frame(f1[[2]], data.ph2)[[1]][,2]==0)) 
     #     # if there are no competing events, drop competing risk formula
     #     f1 = f1[[1]]
     # 
-    if (is.list(f1)) {
+    if (comp.risk) {
       # competing risk implementation
       newdata=data.ph2
       out=sapply(ss, function(x) {
@@ -40,14 +40,24 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
 
     } else {        
       # non-competing risk implementation
-      # inline design object b/c it may also throw an error
-      fit.risk.1=try(svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=data)))        
-      if ( !inherits(fit.risk.1, "try-error" )) {
+      result <- tryCatch({
+        fit.risk.1=svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=data))
         out=marginalized.risk(fit.risk.1, marker.name, data.ph2, t=t, ss=ss, weights=data.ph2$wt, categorical.s=categorical.s)
-        if (n.dean) c(n.dean= last(coef(fit.risk.1)/sqrt(diag(fit.risk.1$var))) * sqrt(1/fit.risk.1$n + 1/fit.risk.1$nevent), out) else out
-      } else {
+        if (n.dean) {
+          c(n.dean= last(coef(fit.risk.1)/sqrt(diag(fit.risk.1$var))) * sqrt(1/fit.risk.1$n + 1/fit.risk.1$nevent), out) 
+        } else out
+      }, 
+      warning = function(w) {
         rep(NA, ifelse(n.dean,1,0)+length(ss))
-      }
+      },
+      error = function(e) {
+        rep(NA, ifelse(n.dean,1,0)+length(ss))
+      },
+      finally = {
+        # cat("This runs no matter what!\n")
+      })
+      result
+      
     } 
   }
   
@@ -71,7 +81,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
       if ( !inherits(out, "try-error" )) {
         out
       } else {
-        NA # no need to rep, b/c results will be a list when called in bootstrap. for the point est, it is unlikely to be NA
+        rep(NA, length(ss)) 
       }
     }
   }    
@@ -83,7 +93,9 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   } else {
     f1=update(form.0, f2)        
   }
-
+  comp.risk=is.list(f1)
+  
+  
   if (type==1) {
     # conditional on S=s (quantitative)
     # don't sort ss or do ss=ss[!duplicated(ss)] because e.g. 15% will be lost and later code depends on that
@@ -111,8 +123,10 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
       fc.1(data.ph2, data, f1, n.dean=TRUE, categorical.s=FALSE)
     }
     
-    n.dean=prob[1]
-    prob=prob[-1]
+    if (!comp.risk) {
+      n.dean=prob[1]
+      prob=prob[-1]
+    } 
 
   } else if (type==2) {
     # conditional on S>=s
@@ -150,7 +164,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     
   } else if (type==4) {
     # conditional on S=s (quantitative)
-    if (is.list(f1)) {
+    if (comp.risk) {
       stop("need to implement this (like type 1 but coef only)") 
     } else {
       tmp.design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=data)
@@ -163,19 +177,25 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   ###############
   # bootstrap
   
-  if(config$case_cohort) ptids.by.stratum=get.ptids.by.stratum.for.bootstrap (data)     
+  if(config$sampling_scheme=="case_cohort") ptids.by.stratum=get.ptids.by.stratum.for.bootstrap (data)     
   seeds=1:B; names(seeds)=seeds
 
   out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {   
     seed=seed+560
     if (verbose>=2) myprint(seed)
     
-    if(config$case_cohort) {
+    if (TRIAL=="moderna_boost") {
+      dat.b = bootstrap.cove.boost.2(data, seed)
+      
+    } else if(config$sampling_scheme=="case_cohort") {
       dat.b = get.bootstrap.data.cor (data, ptids.by.stratum, seed) 
-    } else {
+      
+    } else if(TRIAL=="hvtn705") {
       dat.b = bootstrap.case.control.samples(data, seed, delta.name="EventIndPrimary", strata.name="tps.stratum", ph2.name="ph2") 
-    }        
-    dat.b.ph2=dat.b.ph2[dat.b.ph2$ph2==1, ]
+      
+    } else stop("not sure which bootstrap function to use")
+    
+    dat.b.ph2=subset(dat.b, dat.b$ph2==1)  
     
     # if there is no missing variant info in a bootstrap dataset, only need to run the MI code once
     if (TRIAL %in% c("janssen_partA_VL")) 
@@ -234,7 +254,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   })
   
   res=do.call(cbind, out)
-  if (type==1) {
+  if (type==1 & !comp.risk) {
     # the first row is n.dean
     boot.n.dean=res[1,]
     res=res[-1,]
@@ -252,6 +272,6 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   }
   
   ret = list(marker=if(type==3) names(prob) else ss, prob=prob, boot=res, lb=ci.band[,1], ub=ci.band[,2], if(type==1) n.dean=c(n.dean, boot.n.dean))   
-  if (type==1) names(ret)[length(ret)]="n.dean" # this is necessary because when using if, that element won't have a name
+  if (type==1 & !comp.risk) names(ret)[length(ret)]="n.dean" # this is necessary because when using if, that element won't have a name
   ret  
 }    
