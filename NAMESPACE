@@ -1,6 +1,6 @@
 export(draw.x.axis.cor, report.assay.values, get.xlim, get.marker.histogram)
 
-export(marker.name.to.assay, make.case.count.marker.availability.table)
+export(marker.name.to.assay, make.case.count.marker.availability.table, get.marginalized.risk.no.marker)
 
 export(cove.boost.collapse.strata, add.trichotomized.markers)
 
