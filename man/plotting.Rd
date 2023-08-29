@@ -11,7 +11,7 @@ Functions for plotting.
 \usage{
 
 draw.x.axis.cor(xlim, llox, llox.label, for.ggplot=FALSE)
-get.xlim(dat, marker, lloxs) 
+get.xlim(dat, marker) 
 report.assay.values(x, assay)
 get.marker.histogram(marker, wt, trial, marker.break=marker) 
 
@@ -24,7 +24,6 @@ get.marker.histogram(marker, wt, trial, marker.break=marker)
   \item{for.ggplot}{Boolean}
   \item{dat}{data frame}
   \item{marker}{name of the biomarker variable}
-  \item{lloxs}{list of lloxs}
   \item{x}{x}
   \item{assay}{assay}
   \item{wt}{weight}

@@ -37,7 +37,9 @@ draw.x.axis.cor=function(xlim, llox, llox.label, for.ggplot=FALSE){
 
 
 # get plotting range
-get.xlim=function(dat, marker, lloxs) {
+get.xlim=function(dat, marker) {
+  lloxs=with(assay_metadata, ifelse(llox_labels=="lloq", lloqs, lods))
+  
   assay=marker.name.to.assay(marker)
   
   # the default
