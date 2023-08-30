@@ -38,7 +38,7 @@ draw.x.axis.cor=function(xlim, llox, llox.label, for.ggplot=FALSE){
 
 # get plotting range
 get.xlim=function(dat, marker) {
-  lloxs=with(assay_metadata, ifelse(llox_labels=="lloq", lloqs, lods))
+  lloxs=with(assay_metadata, ifelse(llox_label=="lloq", lloq, lod))
   
   assay=marker.name.to.assay(marker)
   
@@ -72,7 +72,7 @@ get.marker.histogram=function(marker, wt, trial, marker.break=marker) {
 
 
 get.range.cor=function(dat, assay, time) {
-  lloxs=with(assay_metadata, ifelse(llox_labels=="lloq", lloqs, lods))
+  lloxs=with(assay_metadata, ifelse(llox_label=="lloq", lloq, lod))
   
   if(assay %in% c("bindSpike", "bindRBD")) { # & all(c("pseudoneutid50", "pseudoneutid80") %in% assays)
     ret=range(dat[["Day"%.%time%.%"bindSpike"]], 
