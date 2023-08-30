@@ -88,7 +88,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   f2=as.formula(paste0("~.+",marker.name, if(!is.null(additional.terms)) "+"%.%additional.terms))
   
-  comp.risk=is.list(f0)
+  comp.risk=is.list(form.0)
   if (comp.risk) {
     f1=lapply(form.0, function(x) update(x, f2))
   } else {

@@ -1,4 +1,4 @@
-export(draw.x.axis.cor, report.assay.values, get.xlim, get.marker.histogram)
+export(draw.x.axis.cor, report.assay.values, get.xlim, get.marker.histogram, get.range.cor)
 
 export(marker.name.to.assay, make.case.count.marker.availability.table, get.marginalized.risk.no.marker)
 
