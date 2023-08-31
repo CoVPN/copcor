@@ -10,6 +10,8 @@ export(marginalized.risk.svycoxph.boot)
 
 export(pcr2, pcr, predictCompetingRisk2, predictCompetingRisk)
 
+export(hotdeckMI)
+
 
 importFrom(kyotil, '%.%', contain, myprint, last)
 importFrom(survey, svycoxph, twophase)
