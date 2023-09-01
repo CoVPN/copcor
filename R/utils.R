@@ -1,4 +1,4 @@
-utils::globalVariables(c("TRIAL", "config", "assay_metadata", "verbose"))
+utils::globalVariables(c("TRIAL", "config", "assay_metadata", "verbose", "DayPrefix"))
 
 
 # extract assay name from marker names, which include Day, e.g.

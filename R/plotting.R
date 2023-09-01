@@ -48,8 +48,8 @@ get.xlim=function(dat, marker) {
   # may be customized, e.g. to have the same xlim for different variants in the same type of assay
   # if (TRIAL=="moderna_boost") {
   #   if(assay %in% c("bindSpike", "bindRBD")) {
-  #     ret=range(dat[["Day"%.%time%.%"bindSpike"]], 
-  #               dat[["Day"%.%time%.%"bindRBD"]], 
+  #     ret=range(dat[[DayPrefix%.%time%.%"bindSpike"]], 
+  #               dat[[DayPrefix%.%time%.%"bindRBD"]], 
   #               log10(lloxs[c("bindSpike","bindRBD")]/2), na.rm=T)
   #     
   #   } 
@@ -75,17 +75,17 @@ get.range.cor=function(dat, assay, time) {
   lloxs=with(assay_metadata, ifelse(llox_label=="lloq", lloq, lod))
   
   if(assay %in% c("bindSpike", "bindRBD")) { # & all(c("pseudoneutid50", "pseudoneutid80") %in% assays)
-    ret=range(dat[["Day"%.%time%.%"bindSpike"]], 
-              dat[["Day"%.%time%.%"bindRBD"]], 
+    ret=range(dat[[DayPrefix%.%time%.%"bindSpike"]], 
+              dat[[DayPrefix%.%time%.%"bindRBD"]], 
               log10(lloxs[c("bindSpike","bindRBD")]/2), na.rm=T)
     
   } else if(assay %in% c("pseudoneutid50", "pseudoneutid80")) { #  & all(c("pseudoneutid50", "pseudoneutid80") %in% assays)
-    ret=range(dat[["Day"%.%time%.%"pseudoneutid50"]], 
-              dat[["Day"%.%time%.%"pseudoneutid80"]], 
+    ret=range(dat[[DayPrefix%.%time%.%"pseudoneutid50"]], 
+              dat[[DayPrefix%.%time%.%"pseudoneutid80"]], 
               #log10(uloqs[c("pseudoneutid50","pseudoneutid80")]),
               log10(lloxs[c("pseudoneutid50","pseudoneutid80")]/2), na.rm=T) 
   } else {
-    ret=range(dat[["Day"%.%time%.%assay]], 
+    ret=range(dat[[DayPrefix%.%time%.%assay]], 
               log10(lloxs[assay]/2), na.rm=T)        
   }
   delta=(ret[2]-ret[1])/20     
