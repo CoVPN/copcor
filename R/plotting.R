@@ -97,8 +97,8 @@ get.range.cor=function(dat, assay, time) {
 
 # x is the marker values
 # assay is one of assays, e.g. pseudoneutid80
-report.assay.values=function(x, assay){
-  lars.quantiles=seq(0,1,length.out=30) [round(seq.int(1, 30, length.out = 10))]
+report.assay.values=function(x, assay, grid_size=10){
+  lars.quantiles=seq(0,1,length.out=30) [round(seq.int(1, 30, length.out = grid_size))]
   sens.quantiles=c(0.15, 0.85)
   # cannot have different lengths for different assays, otherwise downstream code may break
   fixed.values = log10(c("500"=500, "1000"=1000))
