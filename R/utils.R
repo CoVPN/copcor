@@ -68,7 +68,6 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
     
     if(!startsWith(a, "Delta")) {
       # not fold change
-      print(assay_metadata)
       uloq=assay_metadata$uloq[assay_metadata$assay==marker.name.to.assay(a)]
       uppercut=log10(uloq); uppercut=uppercut*ifelse(uppercut>0,.9999,1.0001)
       lowercut=min(tmp.a, na.rm=T)*1.0001; lowercut=lowercut*ifelse(lowercut>0,1.0001,.9999)
