@@ -6,8 +6,8 @@
 #    3 for categorical S
 # data: ph1 data
 # t: a time point near to the time of the last observed outcome will be defined
-marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL, variant=NULL) {  
-#marker.name=a; type=2; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1
+marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL, variant=NULL) {
+#marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1; additional.terms=NULL; variant=NULL
   
   # store the current rng state 
   save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
@@ -190,7 +190,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     } else if(config$sampling_scheme=="case_cohort") {
       dat.b = get.bootstrap.data.cor (data, ptids.by.stratum, seed) 
       
-    } else if(TRIAL=="hvtn705") {
+    } else if(TRIAL=="hvtn705second") {
       dat.b = bootstrap.case.control.samples(data, seed, delta.name="EventIndPrimary", strata.name="tps.stratum", ph2.name="ph2") 
       
     } else stop("not sure which bootstrap function to use")
