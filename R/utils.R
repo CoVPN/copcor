@@ -13,6 +13,14 @@ marker.name.to.assay=function(a) {
     # BD29pseudoneutid50 => pseudoneutid50
     sub("BD[[0123456789]+", "", a)
     
+  } else if (startsWith(a,"M")) {
+    # M18bindL1L2_HPV6 => bindL1L2_HPV6   
+    sub("M[[0123456789]+", "", a)
+    
+  } else if (startsWith(a,"Mon")) {
+    # Mon18bindL1L2_HPV6 => bindL1L2_HPV6   
+    sub("Mon[[0123456789]+", "", a)
+    
   } else if (contain(a,"overBD1")) {
     # DeltaBD29overBD1pseudoneutid50 => pseudoneutid50
     sub("DeltaBD[[0123456789]+overBD1", "", a)    
