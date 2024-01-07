@@ -57,10 +57,9 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
 
 add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt") {
   
-  if(verbose) print("add.trichotomized.markers ...")
-  
   marker.cutpoints <- list()    
   for (a in markers) {
+    
     if (verbose) myprint(a, newline=F)
     tmp.a=dat[[a]]
     
@@ -74,37 +73,63 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
       flag=dat[[ph2.col.name]]
     }
     
-    if(!startsWith(a, "Delta")) {
+    
+    if(startsWith(a, "Delta")) {
+      # fold change
+      q.a <- wtd.quantile(tmp.a[flag], weights = dat[[wt.col.name]][flag], probs = c(1/3, 2/3))
+      
+    } else {
       # not fold change
       uloq=assay_metadata$uloq[assay_metadata$assay==marker.name.to.assay(a)]
       uppercut=log10(uloq); uppercut=uppercut*ifelse(uppercut>0,.9999,1.0001)
-      lowercut=min(tmp.a, na.rm=T)*1.0001; lowercut=lowercut*ifelse(lowercut>0,1.0001,.9999)
+      
+      lowercut=min(tmp.a, na.rm=T)*1.0001; 
+      lowercut=lowercut*ifelse(lowercut>0,1.0001,.9999)
+      pos.rate=mean(tmp.a>=lowercut, na.rm=T)
+      myprint(pos.rate)
+      
+      binary.cut=FALSE
+      
       if (mean(tmp.a>uppercut, na.rm=T)>1/3) {
         # if more than 1/3 of vaccine recipients have value > ULOQ, let q.a be (median among those < ULOQ, ULOQ)
         if (verbose) cat("more than 1/3 of vaccine recipients have value > ULOQ\n")
         q.a=c(wtd.quantile(tmp.a[dat[[a]]<=uppercut & flag], weights = dat[[wt.col.name]][tmp.a<=uppercut & flag], probs = c(1/2)),  uppercut)
-      } else if (mean(tmp.a<lowercut, na.rm=T)>1/3) {
-        # if more than 1/3 of vaccine recipients have value at min, let q.a be (min, median among those > LLOQ)
-        if (verbose) cat("more than 1/3 of vaccine recipients have at min\n")
-        q.a=c(lowercut, wtd.quantile(tmp.a[dat[[a]]>=lowercut & flag], weights = dat[[wt.col.name]][tmp.a>=lowercut & flag], probs = c(1/2))  )
-      } else {
+      
+      } else if (2/3<=pos.rate) {
         # this implementation uses all non-NA markers, which include a lot of subjects outside ph2, and that leads to uneven distribution of markers between low/med/high among ph2
         #q.a <- wtd.quantile(tmp.a, weights = dat[[wt.col.name]], probs = c(1/3, 2/3))
         q.a <- wtd.quantile(tmp.a[flag], weights = dat[[wt.col.name]][flag], probs = c(1/3, 2/3))
+      
+      } else if (1/3<=pos.rate & pos.rate<2/3) {
+        # if more than 1/3 of vaccine recipients have value at min, let q.a be (min, median among those > LLOQ)
+        if (verbose) cat("more than 1/3 of vaccine recipients have at min\n")
+        q.a=c(lowercut, wtd.quantile(tmp.a[dat[[a]]>=lowercut & flag], weights = dat[[wt.col.name]][tmp.a>=lowercut & flag], probs = c(1/2))  )
+        
+      } else {
+        # if pos.rate less than 1/3, make a binary variable
+        binary.cut=TRUE
+        cat("binary cut\n")
+        q.a=c(lowercut)
+        
       }
-    } else {
-      # fold change
-      q.a <- wtd.quantile(tmp.a[flag], weights = dat[[wt.col.name]][flag], probs = c(1/3, 2/3))
+      
     }
+    
     tmp=try(factor(cut(tmp.a, breaks = c(-Inf, q.a, Inf))), silent=T)
+    if (inherits(tmp, "try-error")) {
+      # if there is a huge point mass, an error would occur
+      failed = TRUE
+    } else if(!binary.cut & length(table(tmp)) != 3) {
+      # or it may not break into 3 groups
+      failed = TRUE
+    } else {
+      failed = FALSE
+    }
     
-    do.cut=FALSE # if TRUE, use cut function which does not use weights
-    # if there is a huge point mass, an error would occur, or it may not break into 3 groups
-    if (inherits(tmp, "try-error")) do.cut=TRUE else if(length(table(tmp)) != 3) do.cut=TRUE
-    
-    if(!do.cut) {
+    if(!failed) {
       dat[[a %.% "cat"]] <- tmp
       marker.cutpoints[[a]] <- q.a
+      
     } else {
       cat("\nfirst cut fails, call cut again with breaks=3 \n")
       # cut is more robust but it does not incorporate weights
@@ -116,11 +141,13 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
       tmpname = substr(tmpname, 2, nchar(tmpname)-1)
       marker.cutpoints[[a]] <- as.numeric(strsplit(tmpname, ",")[[1]])
     }
-    stopifnot(length(table(dat[[a %.% "cat"]])) == 3)
+    
+    stopifnot(binary.cut | length(table(dat[[a %.% "cat"]])) == 3)
     if(verbose) {
       print(table(dat[[a %.% "cat"]]))
       cat("\n")
     }
+    
   }
   
   attr(dat, "marker.cutpoints")=marker.cutpoints
