@@ -13,6 +13,10 @@ marker.name.to.assay=function(a) {
     # BD29pseudoneutid50 => pseudoneutid50
     sub("BD[[0123456789]+", "", a)
     
+  } else if (startsWith(a,"B")) {
+    # Bpseudoneutid50 => pseudoneutid50
+    substring(a, 2)
+    
   } else if (startsWith(a,"M")) {
     # M18bindL1L2_HPV6 => bindL1L2_HPV6   
     sub("M[[0123456789]+", "", a)
