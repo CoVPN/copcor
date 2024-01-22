@@ -74,7 +74,7 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
                      "janssen_pooled_EUA","janssen_na_EUA","janssen_la_EUA","janssen_sa_EUA")) {
       flag=rep(TRUE, length(tmp.a))
     } else {
-      flag=dat[[ph2.col.name]]
+      flag=as.logical(dat[[ph2.col.name]])
     }
     
     
