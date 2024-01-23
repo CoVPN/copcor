@@ -70,7 +70,8 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
     # if we estimate cutpoints using all non-NA markers, it may have an issue when a lot of subjects outside ph2 have non-NA markers
     # since that leads to uneven distribution of markers between low/med/high among ph2
     # this issue did not affect earlier trials much, but it is a problem with vat08m. We are changing the code for trials after vat08m
-    if (TRIAL %in% c("hvtn705","hvtn705V1V2","hvtn705second","hvtn705secondRSA","hvtn705secondNonRSA","moderna_real","moderna_mock","prevent19",
+    if (TRIAL %in% c("hvtn705","hvtn705V1V2","hvtn705second","hvtn705secondRSA","hvtn705secondNonRSA",
+                     "moderna_real","moderna_mock","prevent19",
                      "janssen_pooled_EUA","janssen_na_EUA","janssen_la_EUA","janssen_sa_EUA")) {
       flag=rep(TRUE, length(tmp.a))
     } else {
