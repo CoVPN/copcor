@@ -61,7 +61,14 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
 
 add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt") {
   
-  marker.cutpoints <- list()    
+  # this allows adding to marker.cutpoints
+  if (is.null(attr(dat, "marker.cutpoints"))) {
+    marker.cutpoints <- list()    
+  } else {
+    marker.cutpoints <- attr(dat, "marker.cutpoints")    
+  }
+  
+  
   for (a in markers) {
     
     if (verbose) myprint(a, newline=F)
