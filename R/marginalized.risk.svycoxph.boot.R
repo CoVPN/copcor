@@ -123,10 +123,8 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
       fc.1(data.ph2, data, f1, n.dean=TRUE, categorical.s=FALSE)
     }
     
-    if (!comp.risk) {
-      n.dean=prob[1]
-      prob=prob[-1]
-    } 
+    n.dean=prob[1]
+    prob=prob[-1]
 
   } else if (type==2) {
     # conditional on S>=s
@@ -178,6 +176,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   # bootstrap
   
   if(config$sampling_scheme=="case_cohort") ptids.by.stratum=get.ptids.by.stratum.for.bootstrap (data)     
+  
   seeds=1:B; names(seeds)=seeds
 
   out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {   
@@ -193,13 +192,17 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     } else if(TRIAL=="hvtn705second") {
       dat.b = bootstrap.case.control.samples(data, seed, delta.name="EventIndPrimary", strata.name="tps.stratum", ph2.name="ph2") 
       
+    } else if(config$sampling_scheme=="cohort") {
+      dat.b = bootstrap.cohort(data, seed) 
+      
     } else stop("not sure which bootstrap function to use")
     
     dat.b.ph2=subset(dat.b, dat.b$ph2==1)  
     
     # if there is no missing variant info in a bootstrap dataset, only need to run the MI code once
-    if (TRIAL %in% c("janssen_partA_VL")) 
+    if (TRIAL %in% c("janssen_partA_VL")) {
       nImp = ifelse(any(with(subset(dat.b.ph2, dat.b.ph2$EventIndPrimary==1), is.na(seq1.variant))), 10, 1)
+    }
     
     if(type==1) {
       # conditional on s
@@ -254,7 +257,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   })
   
   res=do.call(cbind, out)
-  if (type==1 & !comp.risk) {
+  if (type==1) {
     # the first row is n.dean
     boot.n.dean=res[1,]
     res=res[-1,]

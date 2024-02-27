@@ -241,3 +241,12 @@ get.ptids.by.stratum.for.bootstrap = function(data) {
 
 
 
+bootstrap.cohort=function(dat, seed) {
+  
+  set.seed(seed)
+  
+  dat.b=dat[sample.int(nrow(dat), replace=TRUE),]
+  
+  dat.b
+
+}

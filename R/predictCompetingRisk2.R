@@ -33,7 +33,7 @@ predictCompetingRisk2=function(formula.list, data, t0, newdata=data, ...){
 		
     if (all(Fs[[1]]==1)) {
 			stop("return because there are no cases of interest")
-	}
+	  }
 
     # assume the first is the cause of interest
     bhaz.1=bhazs[[1]]
@@ -59,9 +59,9 @@ predictCompetingRisk2=function(formula.list, data, t0, newdata=data, ...){
     
     # cumulative incidence 
     cum.ind = S.1.mat * h # dim: n_subj
-	out = colSums(cum.ind)
-	attr(out, "cumulative") <- apply(cum.ind, 2, cumsum)
-	attr(out, "time") <- tt[idx]
+  	out = colSums(cum.ind)
+  	attr(out, "cumulative") <- apply(cum.ind, 2, cumsum)
+  	attr(out, "time") <- tt[idx]
 
 	out    
 }
