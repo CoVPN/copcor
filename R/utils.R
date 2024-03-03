@@ -97,7 +97,7 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
       
       lowercut=min(tmp.a, na.rm=T)*1.0001; 
       lowercut=lowercut*ifelse(lowercut>0,1.0001,.9999)
-      pos.rate=mean(tmp.a>=lowercut, na.rm=T)
+      pos.rate=mean(tmp.a[flag]>=lowercut, na.rm=T)
       myprint(pos.rate)
       
       binary.cut=FALSE
