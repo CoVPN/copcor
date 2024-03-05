@@ -13,12 +13,16 @@ export(pcr2, pcr, predictCompetingRisk2, predictCompetingRisk)
 export(hotdeckMI)
 
 
-importFrom(kyotil, '%.%', contain, myprint, last)
+importFrom(kyotil, '%.%', contain, myprint, last, trim, mypdf,
+  cbinduneven, concatList , empty.plot , formatDouble , mylegend,
+  mylines , mymatplot , mytex , mywrite.csv )
+importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold, 
+  marginalized.risk.cont.2, controlled.risk.bias.factor, E.value)
 importFrom(survey, svycoxph, twophase)
-importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold)
 importFrom(Hmisc, wtd.quantile)
 importFrom(assertthat, assert_that)
-importFrom(survival, coxph)
+importFrom(survival, coxph, survfit)
+importFrom(here, here)
 importFrom(plotrix, weighted.hist)
 
 

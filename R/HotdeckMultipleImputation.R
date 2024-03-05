@@ -1,5 +1,3 @@
-
-
 #hotdeckMI: R function for making hotdeck multiple imputation data sets
 #           as described in Sun, Qi, Heng, Gilbert (2020, JRSS-C)
 #           Peter Gilbert May 18, 2023; reviewed by Michal Juraska May 19, 2023.
@@ -212,12 +210,12 @@ hotdeckMI <-
       return(Eucdists)
     }
     
-    # Helper function that inputs a matrix of TRUE/FALSE values and returns a vector indicating whether all columns are TRUE
-    
+    # Helper function that inputs a matrix of discrete values `matt` and a vector of discrete values `r`; the function returns a vector v where v[i] indicate whether the i-th row of matt equals r
+    #alltrue was revised by Li in v6
     alltrue <- function(r, matt) {
       return(apply(matt, 1, function(x, y) {
         identical(x, y)
-      }, y = matt[r,]))
+      }, y = r))
     }
     
     NN <- length(Delta) # Number of rows/participants in the data set
@@ -280,7 +278,7 @@ hotdeckMI <-
               Deltabt == 1 &
               epsilonzbt == 1 &
               epsilonabt == 1 &
-              epsilonvbt == 1 & alltrue(i, Z1discretebt) & c(1:NN) != i
+              epsilonvbt == 1 & alltrue(Z1discrete[i, ], Z1discretebt)
           } else {
             # Avdiscrete is used
             availableneighborcases <-
@@ -288,7 +286,8 @@ hotdeckMI <-
               epsilonzbt == 1 &
               epsilonabt == 1 &
               epsilonvbt == 1 &
-              alltrue(i, Z1discretebt) & alltrue(i, Avdiscretebt) & c(1:NN) != i
+              alltrue(Z1discrete[i, ], Z1discretebt) &
+              alltrue(Avdiscrete[i, ], Avdiscretebt)
           }
           
           if (sum(availableneighborcases[availableneighborcases]) == 0) {
@@ -299,12 +298,11 @@ hotdeckMI <-
                 Deltabt == 1 &
                 epsilonzbt == 1 &
                 epsilonabt == 1 &
-                epsilonvbt == 1 & alltrue(i, Avdiscretebt) & c(1:NN) != i
+                epsilonvbt == 1 & alltrue(Avdiscrete[i, ], Avdiscretebt)
             }
             else {
               availableneighborcases <-
-                Deltabt == 1 &
-                epsilonzbt == 1 & epsilonabt == 1 & epsilonvbt == 1 & c(1:NN) != i
+                Deltabt == 1 & epsilonzbt == 1 & epsilonabt == 1 & epsilonvbt == 1
             }
             
             # Michal Juraska 05/18/23 PROBLEM: PERFECT MATCHING ON Z1DISCRETE ALONE WHEN AVDISCRETE IS AVAILABLE IS NOT CONSIDERED. SHOULD IT BE IF
@@ -317,14 +315,13 @@ hotdeckMI <-
                 Deltabt == 1 &
                 epsilonzbt == 1 &
                 epsilonabt == 1 &
-                epsilonvbt == 1 & alltrue(i, Z1discretebt) & c(1:NN) != i
+                epsilonvbt == 1 & alltrue(Z1discrete[i, ], Z1discretebt)
             }
             
             #Fourth, if could not find complete matches based on Z1discrete alone, consider all cases:
             if (sum(availableneighborcases[availableneighborcases]) == 0) {
               availableneighborcases <-
-                Deltabt == 1 &
-                epsilonzbt == 1 & epsilonabt == 1 & epsilonvbt == 1 & c(1:NN) != i
+                Deltabt == 1 & epsilonzbt == 1 & epsilonabt == 1 & epsilonvbt == 1
             }
             if (sum(availableneighborcases[availableneighborcases]) == 0) {
               print("Problem 3 Case 1")
@@ -357,10 +354,8 @@ hotdeckMI <-
             indsminusi[order(distsavailableneighborcases)][1:L]
           # If length(indsminusi) < L, then NAs are introduced into Lnearestneighbors.  So only sample from the
           # nonmissing elements of Lnearestneighbors
-          Lnearestneighbors <-
-            Lnearestneighbors[!is.na(Lnearestneighbors)]
-          Vmat[i, m] <-
-            sample(Vbt[Lnearestneighbors], size = 1, replace = T)
+          Lnearestneighbors <- Lnearestneighbors[!is.na(Lnearestneighbors)]
+          Vmat[i, m] <- sample(Vbt[Lnearestneighbors], size = 1, replace = T)
           
           # Youyi troubleshoot
           # Are Lnearestneighbors ever missing?
@@ -411,14 +406,13 @@ hotdeckMI <-
             Deltabt == 1 &
             epsilonzbt == 1 &
             epsilonabt == 0 &
-            epsilonvbt == 1 & alltrue(i, Z1discretebt) & c(1:NN) != i
+            epsilonvbt == 1 & alltrue(Z1discrete[i, ], Z1discretebt)
           
           if (sum(availableneighborcases[availableneighborcases]) == 0) {
             # Second, if could not find complete matches based on the discrete covariates, consider all cases:
             # Repeats the identical code as above:
             availableneighborcases <-
-              Deltabt == 1 &
-              epsilonzbt == 1 & epsilonabt == 0 & epsilonvbt == 1 & c(1:NN) != i
+              Deltabt == 1 & epsilonzbt == 1 & epsilonabt == 0 & epsilonvbt == 1
             if (sum(availableneighborcases[availableneighborcases]) == 0) {
               print("Problem 3 Case 2")
             }
@@ -439,10 +433,8 @@ hotdeckMI <-
             indsminusi[order(distsavailableneighborcases)][1:L]
           # If length(indsminusi) < L, then NAs are introduced into Lnearestneighbors.  So only sample from the
           # nonmissing elements of Lnearestneighbors
-          Lnearestneighbors <-
-            Lnearestneighbors[!is.na(Lnearestneighbors)]
-          Vmat[i, m] <-
-            sample(Vbt[Lnearestneighbors], size = 1, replace = T)
+          Lnearestneighbors <- Lnearestneighbors[!is.na(Lnearestneighbors)]
+          Vmat[i, m] <- sample(Vbt[Lnearestneighbors], size = 1, replace = T)
           
           cat(paste("Z2 observed and Av not observed i:"), "\n")
           cat(paste("Subject i X, Z1scalar, Z2 = "), "\n")
@@ -469,7 +461,7 @@ hotdeckMI <-
               Deltabt == 1 &
               epsilonzbt == 0 &
               epsilonabt == 1 &
-              epsilonvbt == 1 & alltrue(i, Z1discretebt) & c(1:NN) != i
+              epsilonvbt == 1 & alltrue(Z1discrete[i, ], Z1discretebt)
           } else {
             # Avdiscrete is used
             availableneighborcases <-
@@ -477,15 +469,15 @@ hotdeckMI <-
               epsilonzbt == 0 &
               epsilonabt == 1 &
               epsilonvbt == 1 &
-              alltrue(i, Z1discretebt) & alltrue(i, Avdiscretebt) & c(1:NN) != i
+              alltrue(Z1discrete[i, ], Z1discretebt) &
+              alltrue(Avdiscrete[i, ], Avdiscretebt)
           }
           
           if (sum(availableneighborcases[availableneighborcases]) == 0) {
             # Second, if could not find complete matches based on the discrete covariates, consider all cases:
             # Repeats the identical code as above:
             availableneighborcases <-
-              Deltabt == 1 &
-              epsilonzbt == 0 & epsilonabt == 1 & epsilonvbt == 1 & c(1:NN) != i
+              Deltabt == 1 & epsilonzbt == 0 & epsilonabt == 1 & epsilonvbt == 1
             if (sum(availableneighborcases[availableneighborcases]) == 0) {
               print("Problem 3 Case 3")
             }
@@ -506,14 +498,11 @@ hotdeckMI <-
             indsminusi[order(distsavailableneighborcases)][1:L]
           # If length(indsminusi) < L, then NAs are introduced into Lnearestneighbors.  So only sample from the
           # nonmissing elements of Lnearestneighbors
-          Lnearestneighbors <-
-            Lnearestneighbors[!is.na(Lnearestneighbors)]
+          Lnearestneighbors <- Lnearestneighbors[!is.na(Lnearestneighbors)]
           # If length(indsminusi) < L, then NAs are introduced into Lnearestneighbors.  So only sample from the
           # nonmissing elements of Lnearestneighbors
-          Lnearestneighbors <-
-            Lnearestneighbors[!is.na(Lnearestneighbors)]
-          Vmat[i, m] <-
-            sample(Vbt[Lnearestneighbors], size = 1, replace = T)
+          Lnearestneighbors <- Lnearestneighbors[!is.na(Lnearestneighbors)]
+          Vmat[i, m] <- sample(Vbt[Lnearestneighbors], size = 1, replace = T)
           
           cat(paste("Z2 not observed and Av observed i:"), "\n")
           cat(paste("Subject i X, Z1scalar, Avscalar = "), "\n")
@@ -539,14 +528,13 @@ hotdeckMI <-
             Deltabt == 1 &
             epsilonzbt == 0 &
             epsilonabt == 0 &
-            epsilonvbt == 1 & alltrue(i, Z1discretebt) & c(1:NN) != i
+            epsilonvbt == 1 & alltrue(Z1discrete[i, ], Z1discretebt)
           
           if (sum(availableneighborcases[availableneighborcases]) == 0) {
             # Second, if could not find complete matches based on the discrete covariates, consider all cases:
             # Repeats the identical code as above:
             availableneighborcases <-
-              Deltabt == 1 &
-              epsilonzbt == 0 & epsilonabt == 0 & epsilonvbt == 1 & c(1:NN) != i
+              Deltabt == 1 & epsilonzbt == 0 & epsilonabt == 0 & epsilonvbt == 1
             if (sum(availableneighborcases[availableneighborcases]) == 0) {
               print("Problem 3 Case 4")
             }
@@ -567,10 +555,8 @@ hotdeckMI <-
             indsminusi[order(distsavailableneighborcases)][1:L]
           # If length(indsminusi) < L, then NAs are introduced into Lnearestneighbors.  So only sample from the
           # nonmissing elements of Lnearestneighbors
-          Lnearestneighbors <-
-            Lnearestneighbors[!is.na(Lnearestneighbors)]
-          Vmat[i, m] <-
-            sample(Vbt[Lnearestneighbors], size = 1, replace = T)
+          Lnearestneighbors <- Lnearestneighbors[!is.na(Lnearestneighbors)]
+          Vmat[i, m] <- sample(Vbt[Lnearestneighbors], size = 1, replace = T)
           
           cat(paste("Z2 not observed and Av not observed i:"), "\n")
           cat(paste("Subject i X, Z1scalar = "), "\n")
@@ -602,30 +588,30 @@ hotdeckMI <-
 
 # Test data
 
-#set.seed(32)
-## Need to enter Z1discrete, Z1scalar, Avscalar as matrices, even if only one element
-## X, Delta, Z2, V are univariate vectors
-#X <- runif(800)
-#Delta <- rbinom(800,1,0.5)
-#Z1discrete <- matrix(rbinom(1600,1,0.5),ncol=2)
-#Z1scalar <- matrix(rnorm(1600),ncol=2)
-#Z2 <- rnorm(800)
-#epsilonz <- rbinom(800,1,0.3)
-#Z2[epsilonz==0] <- NA
-#V <- runif(800)
-#V[Delta==0] <- NA
-#epsilonv <- rep(1,800)
-#epsilonv[Delta==1] <- rbinom(length(Delta[Delta==1]),1,0.7)
-#V[epsilonv==0] <- NA
-#Avdiscrete <- matrix(rep(NA,800),ncol=1)
-#Avdiscrete <- matrix(rbinom(1600,1,.5),ncol=2)
-#Avdiscrete[Delta==0,1] <- NA
-#Avdiscrete[Delta==0,2] <- NA
-#Avscalar <- matrix(rnorm(1600)+3,ncol=2)
-#Avscalar[Delta==0,1] <- NA
-#Avscalar[Delta==0,2] <- NA
-#epsilona <- rep(1,800) # Case where auxiliaries of cases are always measured
-#M <- 10
-#L <- 5
+# set.seed(32)
+# # Need to enter Z1discrete, Z1scalar, Avscalar as matrices, even if only one element
+# # X, Delta, Z2, V are univariate vectors
+# X <- runif(800)
+# Delta <- rbinom(800,1,0.5)
+# Z1discrete <- matrix(rbinom(1600,1,0.5),ncol=2)
+# Z1scalar <- matrix(rnorm(1600),ncol=2)
+# Z2 <- rnorm(800)
+# epsilonz <- rbinom(800,1,0.3)
+# Z2[epsilonz==0] <- NA
+# V <- runif(800)
+# V[Delta==0] <- NA
+# epsilonv <- rep(1,800)
+# epsilonv[Delta==1] <- rbinom(length(Delta[Delta==1]),1,0.7)
+# V[epsilonv==0] <- NA
+# Avdiscrete <- matrix(rep(NA,800),ncol=1)
+# Avdiscrete <- matrix(rbinom(1600,1,.5),ncol=2)
+# Avdiscrete[Delta==0,1] <- NA
+# Avdiscrete[Delta==0,2] <- NA
+# Avscalar <- matrix(rnorm(1600)+3,ncol=2)
+# Avscalar[Delta==0,1] <- NA
+# Avscalar[Delta==0,2] <- NA
+# epsilona <- rep(1,800) # Case where auxiliaries of cases are always measured
+# M <- 10
+# L <- 5
 #
-#ans <- hotdeckMI(X,Delta,Z1discrete,Z1scalar,Z2,epsilonz,V,epsilonv,Avdiscrete,Avscalar,epsilona,M,L)
+# ans <- hotdeckMI(X,Delta,Z1discrete,Z1scalar,Z2,epsilonz,V,epsilonv,Avdiscrete,Avscalar,epsilona,M,L)
