@@ -10,12 +10,14 @@ export(marginalized.risk.svycoxph.boot)
 
 export(pcr2, pcr, predictCompetingRisk2, predictCompetingRisk)
 
-export(hotdeckMI)
+export(hotdeckMI, escape)
+
+export(cor_coxph_risk_plotting, cor_coxph_risk_bootstrap, cor_coxph_coef_n, cor_coxph_coef_1, cor_coxph_coef_itxn3)
 
 
 importFrom(kyotil, '%.%', contain, myprint, last, trim, mypdf,
   cbinduneven, concatList , empty.plot , formatDouble , mylegend,
-  mylines , mymatplot , mytex , mywrite.csv )
+  mylines , mymatplot , mytex , mywrite.csv, getFixedEf, getFormattedSummary, p.adj.perm )
 importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold, 
   marginalized.risk.cont.2, controlled.risk.bias.factor, E.value)
 importFrom(survey, svycoxph, twophase)
@@ -24,7 +26,7 @@ importFrom(assertthat, assert_that)
 importFrom(survival, coxph, survfit)
 importFrom(here, here)
 importFrom(plotrix, weighted.hist)
-
+importFrom(future, availableCores)
 
 import(stats)
 import(utils)

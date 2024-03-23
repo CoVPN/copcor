@@ -1,6 +1,16 @@
 utils::globalVariables(c("TRIAL", "config", "assay_metadata", "verbose", "DayPrefix"))
 
 
+# _ causes trouble in captions, and that has to be taken care of by putting \protect{} around the word
+escape=function(x) {
+  for (i in c("_","^")) {
+    x=gsub(i, "\\"%.%i, x, fixed = TRUE)
+  }
+  x
+}
+
+
+
 # extract assay name from marker names, which include Day, e.g.
 # e.g. Day22pseudoneutid50 => pseudoneutid50, Delta22overBpseudoneutid50 => pseudoneutid50
 marker.name.to.assay=function(a) {
