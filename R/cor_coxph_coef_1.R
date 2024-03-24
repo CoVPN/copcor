@@ -32,7 +32,7 @@ cor_coxph_coef_1 = function(
   
   
   ###################################################################################################
-  if(verbose) print("Regression for continuous markers")
+  if(verbose) cat("Regression for continuous markers\n")
   
   fits=list()
   for (a in all.markers) {
@@ -77,7 +77,7 @@ cor_coxph_coef_1 = function(
   
   
   ###################################################################################################
-  if(verbose) print("regression for trichotomized markers")
+  if(verbose) cat("regression for trichotomized markers\n")
   
   fits.tri=list()
   for (a in all.markers) {
@@ -109,7 +109,7 @@ cor_coxph_coef_1 = function(
   
   
   ###################################################################################################
-  if(verbose) print("multitesting adjustment for continuous and trichotomized markers together")
+  if(show.q & verbose) cat("multitesting adjustment for continuous and trichotomized markers together\n")
   
   # If primary_assays is not defined in config, multitesting adjustment is over all assays. 
   # If primary_assays defined, multitesting adjustment is only over this subset. If this set is empty, then no multitesting adjustment is done
@@ -132,7 +132,7 @@ cor_coxph_coef_1 = function(
   pvals.adj.hol=p.adjust(p.unadj, method="holm")
   
   if (length(p.unadj)>1) {
-    print("doing Westfall and Young")
+    if (verbose) ("doing Westfall and Young")
     
     #### Westfall and Young permutation-based adjustment
     if(!file.exists(paste0(save.results.to, "pvals.perm.",fname.suffix,".Rdata"))) {
@@ -216,7 +216,6 @@ cor_coxph_coef_1 = function(
     if(verbose) print(pvals.adj)
     
   } else {
-    print("not doing Westfall and Young")
     pvals.adj=cbind(p.unadj, p.FWER=pvals.adj.hol, p.FDR=pvals.adj.fdr)
     write(NA, file=paste0(save.results.to, "permutation_replicates_"%.%fname.suffix))     # so the rmd file can compile
   }
@@ -401,7 +400,7 @@ cor_coxph_coef_1 = function(
   # multivariate_assays models
   
   if (!is.null(config$multivariate_assays)) {
-    if(verbose) print("Multiple regression")
+    if(verbose) cat("Multiple regression\n")
     
     for (a in config$multivariate_assays) {
       for (i in 1:2) {
@@ -451,7 +450,7 @@ cor_coxph_coef_1 = function(
   # additional_models
   
   if (!is.null(config$additional_models)) {
-    if(verbose) print("Additional models")
+    if(verbose) cat("Additional models\n")
     
     for (a in config$additional_models) {
       tmp=gsub("tpeak",tpeak,a)
@@ -513,7 +512,7 @@ cor_coxph_coef_1 = function(
   # interaction_models
   
   if (!is.null(config$interaction)) {
-    if(verbose) print("Interaction models Cox models")    
+    if(verbose) cat("Interaction models Cox models\n")    
     itxn.pvals=c()      
     for (ab in config$interaction) {
       tmp=trim(strsplit(ab, " *\\* *")[[1]])
