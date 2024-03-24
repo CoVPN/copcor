@@ -24,9 +24,13 @@ cor_coxph_coef_n = function(
   verbose=FALSE
 ) {
   
+  if(verbose) {
+    cat("Running cor_coxph_coef_n \n")
+    myprint(col.headers)
+  }
+
   tps=inherits(design_or_dat, "survey.design")
   if (tps) dat = design_or_dat$phase1$full$variables
-  
 
   fits=list()
   for (a in all.markers) {
@@ -47,9 +51,9 @@ cor_coxph_coef_n = function(
   p=  getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=10)
   
   
-  natrisk=nrow(design_or_dat)
-  nevents=sum(design_or_dat$yy==1)
-  
+  natrisk=nrow(dat)
+  nevents=sum(dat$yy==1)
+
   tab.1=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), 
               est[1,], ci[1,], p[1,])
   if (nCoef>1) {
