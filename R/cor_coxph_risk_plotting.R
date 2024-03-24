@@ -5,19 +5,18 @@ cor_coxph_risk_plotting = function(
   save.results.to,
   config,
   config.cor,
+  
   assay_metadata,
   
   tfinal.tpeak,
   all.markers,
   all.markers.names.short,
   all.markers.names.long,
-  labels.assays.short,
   marker.cutpoints,
   
   multi.imp=F,
   comp.risk=F, 
   
-  has.plac=T,
   dat.pla.seroneg = NULL,
   res.plac.cont = NULL,
   prev.plac=NULL,
@@ -26,14 +25,19 @@ cor_coxph_risk_plotting = function(
   variant=NULL,
   
   show.ve.curves=T,
-  eq.geq.ub=2, # whether to plot risk vs S>=s
-  wo.w.plac.ub=2, # whether to plot plac
+  plot.geq = F, # whether to plot risk vs S>=s
+  plot.no.plac = T, # whether to plot a version without considering plac
   for.title="",
   verbose=FALSE
 ) {
 
   
-myprint(eq.geq.ub, wo.w.plac.ub, for.title)
+has.plac=!is.null(dat.pla.seroneg)
+  
+eq.geq.ub=ifelse(plot.geq, 2, 1)
+wo.w.plac.ub=ifelse(plot.no.plac, 1, 2)
+
+myprint(has.plac, plot.geq, plot.no.plac, for.title)
   
 # make form.s from form.0
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
@@ -45,7 +49,7 @@ prev.vacc = get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
 
 # origin of followup days, may be different from tpeak
 tpeak1 = config.cor$torigin
-if (is.null(tpeak1)) tpeak1 = as.integer(sub(".*[^0-9]+", "", config.cor$EventTimePrimary))
+if (is.null(tpeak1)) tpeak1 = tpeak
 
 tpeak = config.cor$tpeak
 tpeaklag = config.cor$tpeaklag
@@ -97,11 +101,11 @@ lloxs=ifelse(llox_labels=="pos", assay_metadata$pos.cutoff, lloxs)
 
 
 ###################################################################################################
-cat("plot marginalized risk curves for continuous markers, both S=s and S>=s\n")
+cat("plot marginalized risk curves for continuous markers\n")
 
 for (eq.geq in 1:eq.geq.ub) {  # 1 conditional on s,   2 is conditional on S>=s
 for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo lines. Implementation-wise, the main difference is in ylim
-    # eq.geq=1; wo.w.plac=1; a=all.markers[1]
+    # eq.geq=1; wo.w.plac=2; a=all.markers[1]
     
     risks.all=get("risks.all."%.%eq.geq)
     
@@ -112,11 +116,14 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
       if (eq.geq==2 & wo.w.plac==1) {
         # later values in prob may be wildly large due to lack of samples
         ylim=range(sapply(risks.all, function(x) x$prob[1]), if(wo.w.plac==2) prev.plac, prev.vacc, 0)
-        # add some white space at the top to write placebo overall risk
-        ylim[2]=ylim[2]
-        #        ylim=c(0, 0.007)
+        # may need to add some white space at the top to write placebo overall risk
       } else {
-        ylim=range(sapply(risks.all, function(x) x$prob), if(wo.w.plac==2) prev.plac, prev.vacc, 0)
+        ylim = range(lapply(all.markers, function(a) {
+          risks=risks.all[[a]]
+          shown=risks$marker>=wtd.quantile(dat[[a]], dat$wt, 2.5/100) & risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
+          risks$prob[shown]
+        }))
+        ylim=range(ylim, prev.vacc, 0, if(wo.w.plac==1) prev.plac)
       }
       ylims.cor[[eq.geq]][[wo.w.plac]]=ylim
     }
@@ -219,8 +226,8 @@ for (a in all.markers) {
 
 
 
+################################################################################
 cat("plot marginalized risk curves over time for trichotomized markers\n")
-
 
 # no bootstrap
 
@@ -360,12 +367,15 @@ for (a in all.markers) {
   q.a=marker.cutpoints[[a]]
   
   if(length(out)==1) empty.plot() else {
-    mymatplot(out$time[out$time<=tfinal.tpeak], out$risk[out$time<=tfinal.tpeak,], lty=1:3, col=c("green3","green","darkgreen"), type="l", lwd=lwd, make.legend=F, ylab=paste0("Probability* of ",config.cor$txt.endpoint), ylim=ylim, xlab="", las=1, 
-              xlim=c(0,tfinal.tpeak), at=x.time, xaxt="n")
+    # the first point is (tpeaklag, 0)
+    mymatplot(c(tpeaklag, out$time[out$time<=tfinal.tpeak]), rbind(0,out$risk[out$time<=tfinal.tpeak,]), lty=1:3, col=c("green3","green","darkgreen"), 
+              type="l", lwd=lwd, make.legend=F, ylab=paste0("Probability* of ",config.cor$txt.endpoint), ylim=ylim, xlab="", las=1, 
+              xlim=c(tpeaklag,tfinal.tpeak), at=x.time, xaxt="n")
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=all.markers.names.long[a], cex.main=.9, line=2)
     title(main=for.title, cex.main=.9, line=.6)
-    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.4, cex=.8, side=1)
+    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
+                                 .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
     legend=c("Vaccine low","Vaccine medium","Vaccine high", if(has.plac) "Placebo")
     mylegend(x=1, legend=legend, lty=c(1:3,if(has.plac) 1), col=c("green3","green","darkgreen",if(has.plac) "gray"), lwd=2)
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
@@ -465,22 +475,28 @@ for (a in all.markers) {
       data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H))
     }
     
+    
+    
   }
   
+  # truncate x.time to after tpeakkag
+  data.ribbon=data.ribbon[as.numeric(rownames(data.ribbon))>tpeaklag, ]
+  x.time.1=as.numeric(rownames(data.ribbon))
+  
   cex.text <- 0.7
-  at.label=-tfinal.tpeak/6
+  at.label= tpeaklag - (tfinal.tpeak-tpeaklag)/8
   
-  mtext("No. at risk",side=1,outer=FALSE,line=2.5,at=-2,adj=0,cex=cex.text)
-  mtext(paste0("Low:"),side=1,outer=F,line=3.4,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.L,side=1,outer=FALSE,line=3.4,at=x.time,cex=cex.text)
-  mtext(paste0("Med:"),side=1,outer=F,line=4.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.M,side=1,outer=FALSE,line=4.3,at=x.time,cex=cex.text)
-  mtext(paste0("High:"),side=1,outer=F,line=5.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.H,side=1,outer=FALSE,line=5.2,at=x.time,cex=cex.text)
-  mtext(paste0("Plac:"),side=1,outer=F,line=6.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=6.2,at=x.time,cex=cex.text)
+  mtext("No. at risk",side=1,outer=FALSE,line=2.5,at=tpeaklag-2,adj=0,cex=cex.text)
+  mtext(paste0("Low:"),side=1,outer=F,line=3.4,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.L,side=1,outer=FALSE,line=3.4,at=x.time.1,cex=cex.text)
+  mtext(paste0("Med:"),side=1,outer=F,line=4.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.M,side=1,outer=FALSE,line=4.3,at=x.time.1,cex=cex.text)
+  mtext(paste0("High:"),side=1,outer=F,line=5.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.H,side=1,outer=FALSE,line=5.2,at=x.time.1,cex=cex.text)
+  mtext(paste0("Plac:"),side=1,outer=F,line=6.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=6.2,at=x.time.1,cex=cex.text)
   
-  mtext(paste0("Cumulative No. of ",config.cor$txt.endpoint," Endpoints"),side=1,outer=FALSE,line=7.4,at=-2,adj=0,cex=cex.text)
-  mtext(paste0("Low:"),side=1,outer=FALSE,line=8.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.L,side=1,outer=FALSE,line=8.3, at=x.time,cex=cex.text)
-  mtext(paste0("Med:"),side=1,outer=FALSE,line=9.2,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.M,side=1,outer=FALSE,line=9.2 ,at=x.time,cex=cex.text)
-  mtext(paste0("High:"),side=1,outer=FALSE,line=10.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.H,side=1,outer=FALSE,line=10.1,at=x.time,cex=cex.text)
-  mtext(paste0("Plac:"),side=1,outer=FALSE,line=11.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=11.1,at=x.time,cex=cex.text)
+  mtext(paste0("Cumulative No. of ",config.cor$txt.endpoint," Endpoints"),side=1,outer=FALSE,line=7.4,at=tpeaklag-2,adj=0,cex=cex.text)
+  mtext(paste0("Low:"),side=1,outer=FALSE,line=8.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.L,side=1,outer=FALSE,line=8.3, at=x.time.1,cex=cex.text)
+  mtext(paste0("Med:"),side=1,outer=FALSE,line=9.2,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.M,side=1,outer=FALSE,line=9.2 ,at=x.time.1,cex=cex.text)
+  mtext(paste0("High:"),side=1,outer=FALSE,line=10.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.H,side=1,outer=FALSE,line=10.1,at=x.time.1,cex=cex.text)
+  mtext(paste0("Plac:"),side=1,outer=FALSE,line=11.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=11.1,at=x.time.1,cex=cex.text)
   
   dev.off()    
 }
@@ -492,7 +508,7 @@ for (a in all.markers) {
 
 
 ###################################################################################################
-cat("make trichotomized markers, marginalized risk and controlled risk table")
+cat("make trichotomized markers, marginalized risk and controlled risk table\n")
 
 res=sapply (all.markers, function(a) {        
   risks=get("risks.all.3")[[a]]
@@ -517,7 +533,7 @@ write(concatList(tab, "\\\\"), file=paste0(save.results.to, "marginalized_risks_
 
 
 ###################################################################################################
-cat("plot trichotomized markers, log(-log) marginalized survival curves")
+cat("plot trichotomized markers, log(-log) marginalized survival curves\n")
 # for goodness of fit check on PH assumptions
 
 for (a in all.markers) {        
@@ -536,7 +552,8 @@ for (a in all.markers) {
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=all.markers.names.long[a], cex.main=.9, line=2)
     title(main=for.title, line=.6, cex.main=.9)
-    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 3, cex=.8, side=1)   
+    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
+                                 .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 2.8, cex=.8, side=1)   
     legend=c("Vaccine low","Vaccine medium","Vaccine high")
     mylegend(x=3, legend=legend, lty=c(1:3), col=c("green3","green","darkgreen"), lwd=2)
   }
@@ -817,7 +834,7 @@ if (!is.null(config$interaction)) {
       plot(
         risks$marker[shown],
         risks$prob[shown, 1],
-        xlab = paste0(labels.assays.short[marker.name.to.assay(vx)], " (=s)"),
+        xlab = paste0(all.markers.names.short[vx], " (=s)"),
         ylab = paste0(
           "Probability* of ",
           config.cor$txt.endpoint,
@@ -872,7 +889,7 @@ if (!is.null(config$interaction)) {
         legend = paste(signif(10 ** risks$marker.2, 3), legend.txt),
         col = 1:3,
         lty = c(1, 2, 1),
-        title = labels.assays.short[marker.name.to.assay(vthree)],
+        title = all.markers.names.short[vthree],
         lwd = lwd
       )
       

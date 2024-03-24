@@ -19,6 +19,8 @@ cor_coxph_coef_1 = function(
   
 ) {
   
+  if(verbose) print("Running cor_coxph_coef_1")
+  
   has.plac=!is.null(dat.pla.seroneg)
   
   # twophase sampling 
