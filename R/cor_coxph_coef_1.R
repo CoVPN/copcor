@@ -215,7 +215,7 @@ cor_coxph_coef_1 = function(
     
     
   } else {
-    if (verbose) ("doing Holm and FDR adjustment")
+    if (verbose) cat("doing Holm and FDR adjustment\n")
     
     pvals.adj.fdr=p.adjust(p.unadj.1, method="fdr")
     pvals.adj.hol=p.adjust(p.unadj.1, method="holm")

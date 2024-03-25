@@ -14,6 +14,8 @@ cor_coxph_risk_bootstrap = function(
   verbose=FALSE
 ) {
   
+print("cor_coxph_risk_bootstrap")
+  
 tpeak=config.cor$tpeak
 numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows",
                           1, 
@@ -48,9 +50,6 @@ assign("risks.all.1", risks.all.1, envir = .GlobalEnv) # make it available outsi
 
 write(ncol(risks.all.1[[1]]$boot), file=paste0(save.results.to, "bootstrap_replicates"))
 
-
-###################################################################################################
-cat("bootstrap vaccine arm, conditional on categorical S")
 
 ###################################################################################################
 cat("bootstrap vaccine arm, conditional on categorical S\n")
@@ -106,7 +105,7 @@ if (run.Sgts) {
 # interaction models 
 
 if (!is.null(config$interaction)) {
-  if(verbose) print("Interaction models")
+  if(verbose) cat("Interaction models\n")
   
   if(!file.exists(paste0(save.results.to, "itxn.marginalized.risk.Rdata"))) {    
     cat("make itxn.marginalized.risk\n")

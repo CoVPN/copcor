@@ -31,6 +31,7 @@ cor_coxph_risk_plotting = function(
   verbose=FALSE
 ) {
 
+if(verbose) print("Running cor_coxph_risk_plotting")
   
 has.plac=!is.null(dat.pla.seroneg)
   
