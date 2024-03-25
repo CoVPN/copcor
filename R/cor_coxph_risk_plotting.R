@@ -26,7 +26,7 @@ cor_coxph_risk_plotting = function(
   
   show.ve.curves=T,
   plot.geq = F, # whether to plot risk vs S>=s
-  plot.no.plac = T, # whether to plot a version without considering plac
+  plot.w.plac = T, # whether to plot a version with plac line
   for.title="",
   verbose=FALSE
 ) {
@@ -35,7 +35,7 @@ cor_coxph_risk_plotting = function(
 has.plac=!is.null(dat.pla.seroneg)
   
 eq.geq.ub=ifelse(plot.geq, 2, 1)
-wo.w.plac.ub=ifelse(plot.no.plac, 1, 2)
+wo.w.plac.ub=ifelse(plot.w.plac, 2, 1)
 
 myprint(has.plac, plot.geq, plot.no.plac, for.title)
   
