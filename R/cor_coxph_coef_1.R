@@ -29,8 +29,7 @@ cor_coxph_coef_1 = function(
   
   tpeak=config.cor$tpeak
   
-  myprint(fname.suffix) 
-  myprint(show.q, tps, has.plac)
+  myprint(fname.suffix, show.q, tps, has.plac, verbose)
   
   
   ###################################################################################################
@@ -117,7 +116,7 @@ cor_coxph_coef_1 = function(
   # If primary_assays defined, multitesting adjustment is only over this subset. If this set is empty, then no multitesting adjustment is done
   
   p.unadj.1 = c(cont=pvals.cont, tri=overall.p.tri) 
-  # pick out a subset based on config
+  # the markers to perform multitestign are defined in config$primary_assays
   p.unadj=c()
   if (!is.null(config$primary_assays)) {
     if (length(config$primary_assays)>0) {
@@ -128,13 +127,10 @@ cor_coxph_coef_1 = function(
     # bindSpike tertiary has no cases in the upper tertile, cannot do P value
     p.unadj = p.unadj[startsWith(names(p.unadj), "cont."), drop=F]
   }
-  
-  #### Holm and FDR adjustment
-  pvals.adj.fdr=p.adjust(p.unadj, method="fdr")
-  pvals.adj.hol=p.adjust(p.unadj, method="holm")
+
   
   if (length(p.unadj)>1) {
-    if (verbose) ("doing Westfall and Young")
+    if (verbose) cat("doing Westfall and Young\n")
     
     #### Westfall and Young permutation-based adjustment
     if(!file.exists(paste0(save.results.to, "pvals.perm.",fname.suffix,".Rdata"))) {
@@ -217,14 +213,18 @@ cor_coxph_coef_1 = function(
     }
     if(verbose) print(pvals.adj)
     
+    
   } else {
-    pvals.adj=cbind(p.unadj, p.FWER=pvals.adj.hol, p.FDR=pvals.adj.fdr)
+    if (verbose) ("doing Holm and FDR adjustment")
+    
+    pvals.adj.fdr=p.adjust(p.unadj.1, method="fdr")
+    pvals.adj.hol=p.adjust(p.unadj.1, method="holm")
+    
+    pvals.adj=cbind(p.unadj.1, p.FWER=pvals.adj.hol, p.FDR=pvals.adj.fdr)
     write(NA, file=paste0(save.results.to, "permutation_replicates_"%.%fname.suffix))     # so the rmd file can compile
   }
   
-  
-  
-  # since we take ID80 out earlier, we may need to add it back for the table and we do it with the help of p.unadj.1
+  # not all markers were multitesting adjusted  
   pvals.adj = cbind(p.unadj=p.unadj.1, pvals.adj[match(names(p.unadj.1), rownames(pvals.adj)),2:3, drop=F])
   
   if (TRIAL=="prevent19" | TRIAL=='prevent19_stage2') {
@@ -240,7 +240,6 @@ cor_coxph_coef_1 = function(
   
   p.1=formatDouble(pvals.adj["cont."%.%names(pvals.cont),"p.FWER"], 3, remove.leading0=F); p.1=sub("0.000","<0.001",p.1)
   p.2=formatDouble(pvals.adj["cont."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F); p.2=sub("0.000","<0.001",p.2)
-  
   
   tab.1=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est), t(ci), t(p), if(show.q) p.2, if(show.q) p.1)
   rownames(tab.1)=all.markers.names.short
