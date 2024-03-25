@@ -37,7 +37,7 @@ has.plac=!is.null(dat.pla.seroneg)
 eq.geq.ub=ifelse(plot.geq, 2, 1)
 wo.w.plac.ub=ifelse(plot.w.plac, 2, 1)
 
-myprint(has.plac, plot.geq, plot.no.plac, for.title)
+myprint(has.plac, plot.geq, plot.w.plac, for.title)
   
 # make form.s from form.0
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
