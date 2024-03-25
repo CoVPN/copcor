@@ -189,7 +189,9 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     } else if(config$sampling_scheme=="case_cohort") {
       dat.b = get.bootstrap.data.cor (data, ptids.by.stratum, seed) 
       
-    } else if(TRIAL=="hvtn705second") {
+    } else if(config$sampling_scheme=="case_control") {
+      # includes hvtn705second
+      # min.cell.size default to 1
       dat.b = bootstrap.case.control.samples(data, seed, delta.name="EventIndPrimary", strata.name="tps.stratum", ph2.name="ph2") 
       
     } else if(config$sampling_scheme=="cohort") {

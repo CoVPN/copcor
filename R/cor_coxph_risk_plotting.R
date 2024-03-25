@@ -573,7 +573,9 @@ cat("continuous markers, controlled VE curves\n")
 # 3 same as 1 except that no sens curve is shown
 # 4 same as 3 except that y axis on -log(1-) scale
 # 5 same as 1 except that y axis on -log(1-) scale
-for (eq.geq in 1:5) {  
+curve.set=1:5
+if(!plot.geq) curve.set=setdiff(curve.set, 2)
+for (eq.geq in curve.set) {  
   # eq.geq=4; a=all.markers[1]
   
   outs=lapply (all.markers, function(a) {        

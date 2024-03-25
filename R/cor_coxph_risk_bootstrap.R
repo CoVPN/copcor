@@ -14,14 +14,14 @@ cor_coxph_risk_bootstrap = function(
   verbose=FALSE
 ) {
   
-myprint(fname.suffix) 
-myprint(comp.risk, run.Sgts)
-  
 tpeak=config.cor$tpeak
 numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows",
                           1, 
                           min(20, config$num_boot_replicates, future::availableCores())))
 B=config$num_boot_replicates
+
+myprint(fname.suffix, B, numCores, comp.risk, run.Sgts)
+
 
 ###################################################################################################
 cat("bootstrap vaccine arm risk, conditional on continuous S=s\n")
