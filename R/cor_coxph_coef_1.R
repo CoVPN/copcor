@@ -2,6 +2,11 @@
 # one table for continuous markers 
 # one table for discrete markers
 
+# possible errors:
+# Error in .local(x, i, j, ..., value) : not-yet-implemented 'Matrix[<-' method
+#   likely caused by missing values
+
+
 cor_coxph_coef_1 = function(
   form.0,
   design_or_dat, # either design when tps is T, or data frame otherwise
@@ -37,7 +42,7 @@ cor_coxph_coef_1 = function(
   
   fits=list()
   for (a in all.markers) {
-    f= update(form.0, as.formula(paste0("~.+", a)))
+    f = update(form.0, as.formula(paste0("~.+", a)))
     if (tps) {
       fits[[a]]=svycoxph(f, design=design_or_dat) 
     } else {
@@ -130,7 +135,7 @@ cor_coxph_coef_1 = function(
 
   
   if (length(p.unadj)>1) {
-    if (verbose) cat("doing Westfall and Young\n")
+    if (verbose) cat("doing Westfall and Young no select markers\n")
     
     #### Westfall and Young permutation-based adjustment
     if(!file.exists(paste0(save.results.to, "pvals.perm.",fname.suffix,".Rdata"))) {
@@ -215,7 +220,7 @@ cor_coxph_coef_1 = function(
     
     
   } else {
-    if (verbose) cat("doing Holm and FDR adjustment\n")
+    if (verbose) cat("doing Holm and FDR adjustment on all markers\n")
     
     pvals.adj.fdr=p.adjust(p.unadj.1, method="fdr")
     pvals.adj.hol=p.adjust(p.unadj.1, method="holm")
