@@ -71,6 +71,9 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
 
 add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt") {
   
+  if(is.null(dat[[wt.col.name]])) stop("col does not exist: "%.%wt.col.name) 
+  if(is.null(dat[[ph2.col.name]])) stop("col does not exist: "%.%ph2.col.name) 
+  
   # this allows adding to marker.cutpoints
   if (is.null(attr(dat, "marker.cutpoints"))) {
     marker.cutpoints <- list()    
