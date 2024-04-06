@@ -57,7 +57,8 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
   if (!is.list(formula)) {
     # model=T is required because the type of prediction requires it, see Note on ?predict.coxph
     fit.risk = coxph(formula, dat.ph1, model=T) 
-    dat.ph1$EventTimePrimary=followup.day
+    # dat.ph1$EventTimePrimary=followup.day
+    dat.ph1[[as.character(form.0[[2]][[2]])]] = followup.day
     risks = 1 - exp(-predict(fit.risk, newdata=dat.ph1, type="expected"))
     mean(risks)
   } else {
