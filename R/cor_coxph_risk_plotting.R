@@ -180,7 +180,7 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
         text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.vacc[1]+(prev.plac[1]-prev.plac[2])/2, "vaccine overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
       } else {
         if (has.plac) text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=par("usr")[4]-diff(par("usr")[3:4])/20,     "placebo overall "%.%formatDouble(prev.plac[1],3,remove.leading0=F))
-        text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.vacc[1]-(prev.vacc[1]-prev.vacc[2])/4, "vaccine overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
+        text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.vacc[1]-diff(par("usr")[3:4])/20, "vaccine overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
       }
       
       # add histogram
