@@ -5,14 +5,12 @@ cor_coxph_risk_plotting = function(
   save.results.to,
   config,
   config.cor,
-  
-  assay_metadata,
-  
-  tfinal.tpeak,
   all.markers,
   all.markers.names.short,
+
   all.markers.names.long,
   marker.cutpoints,
+  assay_metadata,
   
   multi.imp=F,
   comp.risk=F, 
@@ -32,6 +30,9 @@ cor_coxph_risk_plotting = function(
 ) {
 
 if(verbose) print("Running cor_coxph_risk_plotting")
+  
+tfinal.tpeak = config.cor$tfinal.tpeak
+if (is.null(tfinal.tpeak)) stop("missing tfinal.tpeak in config.cor")
   
 has.plac=!is.null(dat.pla.seroneg)
   
