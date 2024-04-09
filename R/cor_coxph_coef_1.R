@@ -14,7 +14,6 @@ cor_coxph_coef_1 = function(
   save.results.to,
   config,
   config.cor,
-  
   all.markers,
   all.markers.names.short,
   

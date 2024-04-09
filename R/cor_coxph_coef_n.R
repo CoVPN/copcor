@@ -19,7 +19,7 @@ cor_coxph_coef_n = function(
   all.markers.names.short, 
   
   nCoef,
-  col.headers, # lengthn coef, e.g., c("TrtA Moderna~Pfizer", "center(D15)", "TrtA:center(D15)")
+  col.headers, # length n coef, e.g., c("TrtA Moderna~Pfizer", "center(D15)", "TrtA:center(D15)")
   
   verbose=FALSE
 ) {
@@ -86,5 +86,6 @@ cor_coxph_coef_n = function(
     tmp[nrow(tmp),p.val.col]
   })
   
+  pvals.cont
 }
 
