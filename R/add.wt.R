@@ -2,6 +2,10 @@ add.wt=function(dat, ph1="ph1", ph2="ph2", Wstratum="Wstratum", wt="wt", verbose
   
   tmp = dat[[ph1]]==1
   wts_table <- table(dat[tmp,Wstratum], dat[tmp,ph2])
+  if (any(0==wts_table[, 2])) {
+    print(wts_table)
+    stop("there exist empty strata=")
+  }
   if(verbose) print(wts_table)
   wts_norm <- rowSums(wts_table) / wts_table[, 2]
   dat[[wt]] <- wts_norm[dat[[Wstratum]] %.% ""]
