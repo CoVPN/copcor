@@ -6,10 +6,9 @@ cor_coxph_risk_bootstrap = function(
   config,
   config.cor,
   
-  tfinal.tpeak,
   all.markers,
   
-  comp.risk=F, # competing risk
+  tfinal.tpeak=NULL,
   run.Sgts=T, # whether to get risk conditional on continuous S>=s
   verbose=FALSE
 ) {
@@ -17,10 +16,18 @@ cor_coxph_risk_bootstrap = function(
 print("cor_coxph_risk_bootstrap")
   
 tpeak=config.cor$tpeak
+
 numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows",
                           1, 
                           min(20, config$num_boot_replicates, future::availableCores())))
+
 B=config$num_boot_replicates
+
+comp.risk=is.list(form.0) # competing risk
+
+# get tfinal.tpeak
+if (is.null(tfinal.tpeak)) tfinal.tpeak=config.cor$tfinal.tpeak
+if (is.null(tfinal.tpeak)) stop("tfinal.tpeak should be passed in or in config.cor")
 
 myprint(fname.suffix, B, numCores, comp.risk, run.Sgts)
 
