@@ -6,7 +6,8 @@
 #    3 for categorical S
 # data: ph1 data
 # t: a time point near to the time of the last observed outcome will be defined
-marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL, variant=NULL) {
+marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL, 
+                                         variant=NULL) {
 #marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1; additional.terms=NULL; variant=NULL
   
   # store the current rng state 

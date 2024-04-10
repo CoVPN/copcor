@@ -4,7 +4,7 @@ export(marker.name.to.assay, make.case.count.marker.availability.table, get.marg
 
 export(cove.boost.collapse.strata, add.trichotomized.markers)
 
-export(bootstrap.case.control.samples, get.bootstrap.data.cor, bootstrap.cove.boost.2, bootstrap.cove.boost, bootstrap.cohort, get.ptids.by.stratum.for.bootstrap)
+export(bootstrap.case.control.samples, get.bootstrap.data.cor, bootstrap.cove.boost.2, bootstrap.cove.boost, bootstrap.cohort, get.ptids.by.stratum.for.bootstrap, cor_coxph_risk_no_marker)
 
 export(marginalized.risk.svycoxph.boot)
 
