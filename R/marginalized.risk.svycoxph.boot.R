@@ -10,10 +10,10 @@
 # janssen_partA_VL handling is hard coded. 
 #   ph2 depends on marker. fortunately only have to take care of competing risk implementation
 #   outcome is multiple imputed; depends on variant, which is defined globally
-#   marker is mulitiple imputed
+#   marker is multiple imputed
 
-marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL) {
-#marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1; additional.terms=NULL; 
+marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1) {
+#marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1
   
   # store the current rng state 
   save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
@@ -21,8 +21,10 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   data.ph2=subset(data, data$ph2==1)
   
+  if (TRIAL=="janssen_partA_VL") nImp=10 
+  
   if (TRIAL=="janssen_partA_VL" & marker.name %in% c("Day29bindSpike","Day29pseudoneutid50")) {
-    print("Day29bindSpike or Day29pseudoneutid50")
+    # ancestral markers have different weights and ph2 indicators
     data.ph2=subset(data, data$ph2.D29==1)
   } else {
     data.ph2=subset(data, data$ph2==1)
@@ -46,6 +48,9 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
         risks = try(pcr2(f1, data.ph2, t, weights=data.ph2$wt, newdata=newdata), silent=in.boot)
         ifelse (inherits(risks, "try-error"), NA, weighted.mean(risks, data.ph2$wt))
       })
+      
+      out[is.nan(out)]=NA # NaN would cause problems later. set to NA here
+      
       if (n.dean) c(NA,out) else out
 
     } else {        
@@ -96,7 +101,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     }
   }    
   
-  f2=as.formula(paste0("~.+",marker.name, if(!is.null(additional.terms)) "+"%.%additional.terms))
+  f2=as.formula(paste0("~.+",marker.name))
   
   comp.risk=is.list(form.0)
   if (comp.risk) {
@@ -120,17 +125,21 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
       if (log10(100)>min(data[[marker.name]], na.rm=TRUE) & log10(100)<max(data[[marker.name]], na.rm=TRUE)) log10(100)
     ))
     
-    prob = if (TRIAL %in% c("janssen_partA_VL")) {
-      # do MI
-      rowMeans(sapply(1:10, function(imp) {
+    if (TRIAL %in% c("janssen_partA_VL")) {
+      # multiple imputation
+      prob = rowMeans(sapply(1:nImp, function(imp) {
+        # use imputed outcome
         data.ph2$EventIndOfInterest = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
         data.ph2$EventIndCompeting  = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
         data$EventIndOfInterest = ifelse(data$EventIndPrimary==1 & data[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
         data$EventIndCompeting  = ifelse(data$EventIndPrimary==1 & data[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+        # use imputed marker
+        data.ph2[[marker.name]] = data.ph2[[marker.name%.%"_"%.%imp]]
+        data[[marker.name]] = data[[marker.name%.%"_"%.%imp]]
         fc.1(data.ph2, data, f1, n.dean=TRUE, categorical.s=FALSE)
-      }))
+      }), na.rm=T)
     } else {
-      fc.1(data.ph2, data, f1, n.dean=TRUE, categorical.s=FALSE)
+      prob = fc.1(data.ph2, data, f1, n.dean=TRUE, categorical.s=FALSE)
     }
     
     n.dean=prob[1]
@@ -140,15 +149,18 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     # conditional on S>=s
     ss=quantile(data[[marker.name]], seq(0,.9,by=0.05), na.rm=TRUE)
     if(verbose>=2) myprint(ss)
-    prob = if (TRIAL %in% c("janssen_partA_VL")) {
-      # do MI
-      rowMeans(sapply(1:10, function(imp) {
+    if (TRIAL %in% c("janssen_partA_VL")) {
+      # multiple imputation
+      prob = rowMeans(sapply(1:nImp, function(imp) {
+        # use imputed outcome
         data.ph2$EventIndOfInterest = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
         data.ph2$EventIndCompeting  = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+        # use imputed marker
+        data.ph2[[marker.name]] = data.ph2[[marker.name%.%"_"%.%imp]]
         fc.2(data.ph2, form.0)
-      }))
+      }), na.rm=T)
     } else {
-        fc.2(data.ph2, form.0)
+      prob = fc.2(data.ph2, form.0)
     }
     
     
@@ -156,17 +168,27 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     # conditional on S=s (categorical)
     ss=unique(data[[marker.name]]); ss=sort(ss[!is.na(ss)])
     if(verbose>=2) myprint(ss)        
-    prob = if (TRIAL %in% c("janssen_partA_VL")) {
-      # do MI
-      rowMeans(sapply(1:10, function(imp) {
+    
+    if (TRIAL %in% c("janssen_partA_VL")) {
+      
+      # multiple imputation
+      prob = rowMeans(sapply(1:nImp, function(imp) {
+        # use imputed outcome
         data.ph2$EventIndOfInterest = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
         data.ph2$EventIndCompeting  = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
         data$EventIndOfInterest = ifelse(data$EventIndPrimary==1 & data[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
         data$EventIndCompeting  = ifelse(data$EventIndPrimary==1 & data[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+        
+        # use imputed marker
+        # naming convention: marker.name Day29bindSpikecat, imputed marker name Day29bindSpike_1cat
+        data.ph2[[marker.name]] = data.ph2[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
+        data[[marker.name]] = data[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
+        
         fc.1(data.ph2, data, f1, n.dean=FALSE, categorical.s=TRUE)
-      }))
+      }), na.rm=T)
+      
     } else {
-      fc.1(data.ph2, data, f1, n.dean=FALSE, categorical.s=TRUE)
+      prob = fc.1(data.ph2, data, f1, n.dean=FALSE, categorical.s=TRUE)
     }
     
     
@@ -211,21 +233,29 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     
     dat.b.ph2=subset(dat.b, dat.b$ph2==1)  
     
-    # if there is no missing variant info in a bootstrap dataset, only need to run the MI code once
-    if (TRIAL %in% c("janssen_partA_VL")) {
-      nImp = ifelse(any(with(subset(dat.b.ph2, dat.b.ph2$EventIndPrimary==1), is.na(seq1.variant))), 10, 1)
-    }
+    ## also need to check marker, too complicated, thus commented out
+    # # if there is no missing variant info in a bootstrap dataset, only need to run the MI code once
+    # if (TRIAL %in% c("janssen_partA_VL")) {
+    #   nImp = ifelse(any(with(subset(dat.b.ph2, dat.b.ph2$EventIndPrimary==1), is.na(seq1.variant))), nImp, 1)
+    # }
     
     if(type==1) {
       # conditional on s
       if (TRIAL %in% c("janssen_partA_VL")) {
+        # multiple imputation
         rowMeans(sapply(1:nImp, function(imp) {
+          # use imputed outcome
           dat.b.ph2$EventIndOfInterest = ifelse(dat.b.ph2$EventIndPrimary==1 & dat.b.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
           dat.b.ph2$EventIndCompeting  = ifelse(dat.b.ph2$EventIndPrimary==1 & dat.b.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
           dat.b$EventIndOfInterest = ifelse(dat.b$EventIndPrimary==1 & dat.b[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
           dat.b$EventIndCompeting  = ifelse(dat.b$EventIndPrimary==1 & dat.b[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+          
+          # use imputed marker
+          dat.b.ph2[[marker.name]] = dat.b.ph2[[marker.name%.%"_"%.%imp]]
+          dat.b[[marker.name]] = dat.b[[marker.name%.%"_"%.%imp]]
+          
           fc.1(dat.b.ph2, dat.b, f1, n.dean=TRUE, categorical.s=FALSE, in.boot=T)
-        }))
+        }), na.rm=T)
       } else {
         fc.1(dat.b.ph2, dat.b, f1, n.dean=TRUE, categorical.s=FALSE, in.boot=T)
       }
@@ -233,11 +263,17 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     } else if (type==2) {
       # conditional on S>=s
       if (TRIAL %in% c("janssen_partA_VL")) {
+        # multiple imputation
         rowMeans(sapply(1:nImp, function(imp) {
+          # use imputed outcome
           dat.b.ph2$EventIndOfInterest = ifelse(dat.b.ph2$EventIndPrimary==1 & dat.b.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
           dat.b.ph2$EventIndCompeting  = ifelse(dat.b.ph2$EventIndPrimary==1 & dat.b.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+          
+          # use imputed marker
+          dat.b.ph2[[marker.name]] = dat.b.ph2[[marker.name%.%"_"%.%imp]]
+          
           fc.2(dat.b.ph2, form.0, in.boot=T)
-        }))
+        }), na.rm=T)
       } else {
         fc.2(dat.b.ph2, form.0, in.boot=T)
       }
@@ -245,13 +281,20 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     } else if (type==3) {
       # conditional on a categorical S
       if (TRIAL %in% c("janssen_partA_VL")) {
+        # multiple imputation
         rowMeans(sapply(1:nImp, function(imp) {
+          # use imputed outcome
           dat.b.ph2$EventIndOfInterest = ifelse(dat.b.ph2$EventIndPrimary==1 & dat.b.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
           dat.b.ph2$EventIndCompeting  = ifelse(dat.b.ph2$EventIndPrimary==1 & dat.b.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
           dat.b$EventIndOfInterest = ifelse(dat.b$EventIndPrimary==1 & dat.b[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
           dat.b$EventIndCompeting  = ifelse(dat.b$EventIndPrimary==1 & dat.b[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+          
+          # use imputed marker
+          dat.b.ph2[[marker.name]] = dat.b.ph2[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
+          dat.b[[marker.name]] = dat.b[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
+          
           fc.1(dat.b.ph2, dat.b, f1, n.dean=FALSE, categorical.s=TRUE, in.boot=T)
-        }))
+        }), na.rm=T)
       } else {
         fc.1(dat.b.ph2, dat.b, f1, n.dean=FALSE, categorical.s=TRUE, in.boot=T)
       }

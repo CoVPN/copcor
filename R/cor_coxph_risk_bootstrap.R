@@ -29,7 +29,7 @@ comp.risk=is.list(form.0) # competing risk
 if (is.null(tfinal.tpeak)) tfinal.tpeak=config.cor$tfinal.tpeak
 if (is.null(tfinal.tpeak)) stop("tfinal.tpeak should be passed in or in config.cor")
 
-myprint(fname.suffix, B, numCores, comp.risk, run.Sgts)
+myprint(fname.suffix, tfinal.tpeak, B, numCores, comp.risk, run.Sgts)
 
 
 ###################################################################################################
@@ -71,7 +71,7 @@ myprint(fname)
 if(!file.exists(fname)) {    
   risks.all.3=lapply(all.markers, function (a) {
     if(verbose) myprint(a)
-    marginalized.risk.svycoxph.boot(form.0, marker.name=a%.%"cat", type=3, data=dat, tfinal.tpeak, B=B, ci.type="quantile", numCores=numCores)                
+    marginalized.risk.svycoxph.boot(form.0, marker.name=a%.%"cat", type=3, data=dat, t=tfinal.tpeak, B=B, ci.type="quantile", numCores=numCores)                
   })    
   names(risks.all.3)=all.markers
   save(risks.all.3, file=fname)
