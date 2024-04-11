@@ -39,10 +39,10 @@ cor_coxph_risk_no_marker = function(
     
     fname=paste0(save.results.to, "marginalized.risk.no.marker.",fname.suffix,".Rdata")
     
+    vacc.only=is.null(dat.pla.seroneg)
+    
     if(!file.exists(fname)) {    
         cat("Bootstrap marginalized risks using models without markers ...\n")
-        
-        vacc.only=is.null(dat.pla.seroneg)
         
         for (.trt in ifelse(vacc.only, 1, 0):1) {
             dat.tmp=if(.trt==1) dat else dat.pla.seroneg

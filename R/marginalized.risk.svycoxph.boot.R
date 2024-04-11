@@ -6,19 +6,28 @@
 #    3 for categorical S
 # data: ph1 data
 # t: a time point near to the time of the last observed outcome will be defined
-marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL, 
-                                         variant=NULL) {
-#marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1; additional.terms=NULL; variant=NULL
+
+# janssen_partA_VL handling is hard coded. 
+#   ph2 depends on marker. fortunately only have to take care of competing risk implementation
+#   outcome is multiple imputed; depends on variant, which is defined globally
+#   marker is mulitiple imputed
+
+marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1, additional.terms=NULL) {
+#marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1; additional.terms=NULL; 
   
   # store the current rng state 
   save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
   if (inherits(save.seed, "try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) } 
   
-  # input check
-  if (TRIAL %in% c("janssen_partA_VL") & is.null(variant)) stop("Variant needs to be specified for janssen_partA_VL")
-    
-  
   data.ph2=subset(data, data$ph2==1)
+  
+  if (TRIAL=="janssen_partA_VL" & marker.name %in% c("Day29bindSpike","Day29pseudoneutid50")) {
+    print("Day29bindSpike or Day29pseudoneutid50")
+    data.ph2=subset(data, data$ph2.D29==1)
+  } else {
+    data.ph2=subset(data, data$ph2==1)
+  }
+  
   
   # used in both point est and bootstrap
   # many variables are not passed but defined in the scope of marginalized.risk.svycoxph.boot
