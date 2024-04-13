@@ -19,8 +19,6 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
   if (inherits(save.seed, "try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) } 
   
-  data.ph2=subset(data, data$ph2==1)
-  
   if (TRIAL=="janssen_partA_VL") nImp=10 
   
   if (TRIAL=="janssen_partA_VL" & marker.name %in% c("Day29bindSpike","Day29pseudoneutid50")) {

@@ -4,22 +4,22 @@
 #fit.ve = coxph(Surv(EventTimePrimary, EventIndPrimary) ~ Trt, subset(dat_proc, ph1==1)) 
 #summary(fit.ve)
 
-## these results are close to bootstrap results. they are not used later and only for sanity check
-## compute overall risk regardless of markers in both arms by integrating over form.0. 
-## the point estimate matche the results from bootstrap
-## the variance is asymptotic and still needs to be figured out
-#prevs=sapply (c(placebo=0, vaccine=1), function(i) {
+# these results are close to bootstrap results. they are not used later and only for sanity check
+# compute overall risk regardless of markers in both arms by integrating over form.0.
+# the point estimate matche the results from bootstrap
+# the variance is asymptotic and still needs to be figured out
+# prevs=sapply (c(placebo=0, vaccine=1), function(i) {
 #    dat.tmp=subset(dat_proc, Trt==i & Bserostatus==0 & ph1)
 #    fit.tmp = coxph(form.0, dat.tmp, model=T) # model=T to make predict possible
 #    dat.tmp[[config.cor$EventTimePrimary]]=tfinal.tpeak
-#    pred.tmp=predict(fit.tmp, newdata=dat.tmp, type="expected", se.fit=T)    
+#    pred.tmp=predict(fit.tmp, newdata=dat.tmp, type="expected", se.fit=T)
 #    sd.tmp=exp(mean(log(pred.tmp$se.fit)))
 #    prev=c(est=NA, "2.5%"=NA, "97.5%"=NA)
-#    prev[1] = mean (1 - exp(-pred.tmp$fit))    
+#    prev[1] = mean (1 - exp(-pred.tmp$fit))
 #    #prev[2:3] = prev[1] + c(-1,1)*1.96*sd.tmp
-#    prev        
-#})
-#prevs
+#    prev
+# })
+# prevs
 
 
 cor_coxph_risk_no_marker = function(

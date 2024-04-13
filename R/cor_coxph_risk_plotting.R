@@ -1,3 +1,6 @@
+# hard code multiple imputation logic for janssen_partA_VL
+#   need variant
+
 cor_coxph_risk_plotting = function(
   form.0,
   dat,
@@ -7,20 +10,16 @@ cor_coxph_risk_plotting = function(
   config.cor,
   all.markers,
   all.markers.names.short,
+  tfinal.tpeak,
 
   all.markers.names.long,
   marker.cutpoints,
   assay_metadata,
   
-  multi.imp=F,
-  comp.risk=F, 
-  
   dat.pla.seroneg = NULL,
   res.plac.cont = NULL,
   prev.plac=NULL,
   overall.ve=NULL,
-  
-  variant=NULL,
   
   show.ve.curves=T,
   plot.geq = F, # whether to plot risk vs S>=s
@@ -31,8 +30,10 @@ cor_coxph_risk_plotting = function(
 
 if(verbose) print("Running cor_coxph_risk_plotting")
   
-tfinal.tpeak = config.cor$tfinal.tpeak
-if (is.null(tfinal.tpeak)) stop("missing tfinal.tpeak in config.cor")
+comp.risk = is.list(form.0)
+  
+if(is.null(tfinal.tpeak)) tfinal.tpeak = config.cor$tfinal.tpeak
+if (is.null(tfinal.tpeak)) stop("missing tfinal.tpeak")
   
 has.plac=!is.null(dat.pla.seroneg)
   
@@ -45,7 +46,15 @@ myprint(has.plac, plot.geq, plot.w.plac, for.title)
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
 
 # compute prevalence
-prev.vacc = get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
+prev.vacc = if (TRIAL %in% c("janssen_partA_VL")) {
+  mean(sapply(1:10, function(imp) {
+    dat$EventIndOfInterest = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
+    dat$EventIndCompeting  = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+    get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
+  }))
+} else {
+  get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
+}
 
 .mfrow <- c(1, 1)
 
@@ -66,6 +75,16 @@ lods=assay_metadata$lod; names(lods)=assays
 lloxs=ifelse(llox_labels=="lloq", lloqs, lods)
 lloxs=ifelse(llox_labels=="pos", assay_metadata$pos.cutoff, lloxs)
 
+
+if (TRIAL=="janssen_partA_VL") {
+  # there are NA's which mess up get.marker.histogram unless we use a multi-imputed version
+  for(a in assays) {
+    if (!is.null(dat[["Day29"%.%a%.%"_1"]])) {
+      dat[["Day29"%.%a]] = dat[["Day29"%.%a%.%"_1"]]
+      dat[["Day29"%.%a%.%"cat"]] = dat[["Day29"%.%a%.%"_1cat"]]
+    }
+  }
+} 
 
 
 
@@ -238,32 +257,37 @@ data.ph2<- dat[dat$ph2==1,]
 risks.all.ter=list()
 for (a in all.markers) {        
   marker.name=a%.%"cat"    
-  
 
   if (comp.risk) {
     f1=lapply(form.0, function(x) update(x, as.formula(paste0("~.+",marker.name))))
     ss=unique(dat[[marker.name]]); ss=sort(ss[!is.na(ss)])
-    names(ss)=c("low","med","high")
+    if(length(ss)==3) {
+      names(ss)=c("low","med","high")
+    } else {
+      names(ss)=c("low","high")
+    }
 
-    if (multi.imp) {
+    if (TRIAL=="janssen_partA_VL") {
       out=lapply(1:10, function(imp) {
         data.ph2$EventIndOfInterest = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
         data.ph2$EventIndCompeting  = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+        
+        data.ph2[[marker.name]] = data.ph2[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
+        
         newdata=data.ph2
         out=lapply(ss, function(s) {
           newdata[[marker.name]]=s
           risks = pcr2(f1, data.ph2, tfinal.tpeak, weights=data.ph2$wt, newdata=newdata)
           cbind(t=attr(risks,"time"), 
                 cumulative=apply(attr(risks,"cumulative"), 1, weighted.mean, weights=data.ph2$wt))
-          
         })
-        cbind(out[[1]], out[[2]][,"cumulative"], out[[3]][,"cumulative"])
+        cbind(out[[1]], out[[2]][,"cumulative"], if(length(out)==3) out[[3]][,"cumulative"])
       })
       
       all.t=lapply(out, function(x) x[,"t"])
       common.t = Reduce(intersect, all.t)
       risks = sapply(out, simplify="array", function(x) x[x[,"t"] %in% common.t,-1,drop=F])
-      risks.all.ter[[a]]=list(time=common.t, risk=apply(risks, 1:2, mean))
+      risks.all.ter[[a]]=list(time=common.t, risk=apply(risks, 1:2, mean, na.rm=T))
       
     } else {
       out=lapply(ss, function(s) {
@@ -274,7 +298,7 @@ for (a in all.markers) {
               cumulative=apply(attr(risks,"cumulative"), 1, weighted.mean, weights=data.ph2$wt))
         
       })
-      risks.all.ter[[a]] = list(time=out[[1]][,"t"], risk=cbind(out[[1]][,"cumulative"], out[[2]][,"cumulative"], out[[3]][,"cumulative"]))
+      risks.all.ter[[a]] = list(time=out[[1]][,"t"], risk=cbind(out[[1]][,"cumulative"], out[[2]][,"cumulative"], if(length(out)==3) out[[3]][,"cumulative"]))
 
     }
     
@@ -363,6 +387,7 @@ for (a in all.markers) {
   par(las=1, cex.axis=0.9, cex.lab=1)# axis label 
   
   marker.name=a%.%"cat"    
+  myprint(a)
   
   out=risks.all.ter[[a]]
   # cutpoints
@@ -402,6 +427,7 @@ for (a in all.markers) {
   # add data ribbon
   if (TRIAL=="janssen_partA_VL") {
     out=sapply(1:10, simplify="array", function(imp) {
+      
       form.s = Surv(EventTimePrimaryD29, EventIndOfInterest) ~ 1
       
       dat$EventIndOfInterest = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
@@ -409,29 +435,61 @@ for (a in all.markers) {
       km <- survfit(f1, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"])
       tmp=summary(km, times=x.time)            
       
-      #    stopifnot(all(tmp$time[1:length(x.time)]==x.time))
-      #    stopifnot(tmp$time[1:length(x.time)+length(x.time)]==x.time)
-      #    stopifnot(tmp$time[1:length(x.time)+length(x.time)*2]==x.time)
+      has.3.levels = length(levels(dat[[marker.name]]))==3
+      if (has.3.levels) {
+        L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
+        n.risk.L <- round(tmp$n.risk[L.idx])
+        cum.L <- round(cumsum(tmp$n.event[L.idx]))
+        tmp.L = cbind(n.risk.L, cum.L)
+        rownames(tmp.L)=tmp$time[L.idx]
+        
+        M.idx=which(tmp$time==0)[2]:(which(tmp$time==0)[3]-1)
+        n.risk.M <- round(tmp$n.risk[M.idx])
+        cum.M <- round(cumsum(tmp$n.event[M.idx]))
+        tmp.M = cbind(n.risk.M, cum.M)
+        rownames(tmp.M)=tmp$time[M.idx]
+        
+        H.idx=which(tmp$time==0)[3]:length(tmp$time==0)
+        n.risk.H <- round(tmp$n.risk[H.idx])
+        cum.H <- round(cumsum(tmp$n.event[H.idx]))
+        tmp.H = cbind(n.risk.H, cum.H)
+        rownames(tmp.H)=tmp$time[H.idx]
+      } else {
+        L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
+        n.risk.L <- round(tmp$n.risk[L.idx])
+        cum.L <- round(cumsum(tmp$n.event[L.idx]))
+        tmp.L = cbind(n.risk.L, cum.L)
+        rownames(tmp.L)=tmp$time[L.idx]
+        
+        H.idx=which(tmp$time==0)[2]:length(tmp$time==0)
+        n.risk.H <- round(tmp$n.risk[H.idx])
+        cum.H <- round(cumsum(tmp$n.event[H.idx]))
+        tmp.H = cbind(n.risk.H, cum.H)
+        rownames(tmp.H)=tmp$time[H.idx]
+      }
       
-      L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
-      M.idx=which(tmp$time==0)[2]:(which(tmp$time==0)[3]-1)
-      H.idx=which(tmp$time==0)[3]:length(tmp$time==0)
-      
-      n.risk.L <- round(tmp$n.risk[L.idx])
-      n.risk.M <- round(tmp$n.risk[M.idx])
-      n.risk.H <- round(tmp$n.risk[H.idx])
-      
-      cum.L <- round(cumsum(tmp$n.event[L.idx]))
-      cum.M <- round(cumsum(tmp$n.event[M.idx]))
-      cum.H <- round(cumsum(tmp$n.event[H.idx]))
       
       # add placebo
-      dat.pla.seroneg$EventIndOfInterest = ifelse(dat.pla.seroneg$EventIndPrimary==1 & dat.pla.seroneg[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
-      tmp.P=summary(survfit(form.s, dat.pla.seroneg), times=x.time)            
-      n.risk.P <- round(tmp.P$n.risk)
-      cum.P <- round(cumsum(tmp.P$n.event))
-      
-      cbind(cum.L, cum.M, cum.H, cum.P, n.risk.L, n.risk.M, n.risk.H, n.risk.P)
+      if (has.plac) {
+        dat.pla.seroneg$EventIndOfInterest = ifelse(dat.pla.seroneg$EventIndPrimary==1 & dat.pla.seroneg[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
+        survfit.P=summary(survfit(form.s, dat.pla.seroneg), times=x.time)            
+        n.risk.P <- round(survfit.P$n.risk)
+        cum.P <- round(cumsum(survfit.P$n.event))  
+        tmp.P = cbind(n.risk.P, cum.P)
+        rownames(tmp.P)=survfit.P$time
+        if(has.3.levels) {
+          data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H, tmp.P))
+        } else {
+          data.ribbon = cbinduneven(list(tmp.L, tmp.H, tmp.P))
+        }
+      } else {
+        if(has.3.levels) {
+          data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H))
+        } else {
+          data.ribbon = cbinduneven(list(tmp.L, tmp.H))
+        }
+      }
+      as.matrix(data.ribbon)
     })
     if (is.list(out)) stop("cor_coxph_risk_plotting.R: data ribon issue - getting different length output for imputed data")
     data.ribbon = apply(out, 1:2, mean)
@@ -514,7 +572,12 @@ cat("make trichotomized markers, marginalized risk and controlled risk table\n")
 
 res=sapply (all.markers, function(a) {        
   risks=get("risks.all.3")[[a]]
-  with(risks, c(prob[3]/prob[1], quantile(boot[3,]/boot[1,], c(.025,.975), na.rm=T)))
+  has.3.levels = length(risks$prob)==3
+  if (has.3.levels) {
+    with(risks, c(prob[3]/prob[1], quantile(boot[3,]/boot[1,], c(.025,.975), na.rm=T)))
+  } else {
+    with(risks, c(prob[2]/prob[1], quantile(boot[2,]/boot[1,], c(.025,.975), na.rm=T)))
+  }
 })
 #    
 tab=sapply (all.markers, function(a) {
@@ -580,6 +643,7 @@ if(!plot.geq) curve.set=setdiff(curve.set, 2)
 for (eq.geq in curve.set) {  
   # eq.geq=4; a=all.markers[1]
   
+  names(all.markers)=all.markers # required so that outs has names
   outs=lapply (all.markers, function(a) {        
     if (verbose>=2) myprint(a)
     is.delta=startsWith(a,"Delta")
