@@ -5,10 +5,9 @@ cor_coxph_risk_bootstrap = function(
   save.results.to,
   config,
   config.cor,
-  
   all.markers,
-  
   tfinal.tpeak=NULL,
+  
   run.Sgts=T, # whether to get risk conditional on continuous S>=s
   verbose=FALSE
 ) {
@@ -17,9 +16,7 @@ print("cor_coxph_risk_bootstrap")
   
 tpeak=config.cor$tpeak
 
-numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows",
-                          1, 
-                          min(20, config$num_boot_replicates, future::availableCores())))
+numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows", 1, min(20, config$num_boot_replicates, future::availableCores())))
 
 B=config$num_boot_replicates
 
@@ -34,10 +31,6 @@ myprint(fname.suffix, tfinal.tpeak, B, numCores, comp.risk, run.Sgts)
 
 ###################################################################################################
 cat("bootstrap vaccine arm risk, conditional on continuous S=s\n")
-
-# if (TRIAL=="janssen_partA_VL") {
-#   fname = paste0(save.results.to, "risks.all.1.", region, ".", variant, ".Rdata")
-# } else fname = paste0(save.results.to, "risks.all.1.Rdata")
 
 fname = paste0(save.results.to, "risks.all.1_", fname.suffix, ".Rdata")
 myprint(fname)
@@ -61,10 +54,6 @@ write(ncol(risks.all.1[[1]]$boot), file=paste0(save.results.to, "bootstrap_repli
 ###################################################################################################
 cat("bootstrap vaccine arm, conditional on categorical S\n")
 
-# if (TRIAL=="janssen_partA_VL") {
-#   fname = paste0(save.results.to, "risks.all.3.", region, ".", variant, ".Rdata")
-# } else fname = paste0(save.results.to, "risks.all.3.Rdata")
-
 fname = paste0(save.results.to, "risks.all.3_", fname.suffix, ".Rdata")
 myprint(fname)
 
@@ -85,10 +74,6 @@ assign("risks.all.3", risks.all.3, envir = .GlobalEnv) # make it available outsi
 ###################################################################################################
 if (run.Sgts) {
   cat("bootstrap vaccine arm risk, conditional on continuous S>=s\n")
-  
-  # if (TRIAL=="janssen_partA_VL") {
-  #   fname = paste0(save.results.to, "risks.all.2.", region, ".", variant, ".Rdata")
-  # } else fname = paste0(save.results.to, "risks.all.2.Rdata")
   
   fname = paste0(save.results.to, "risks.all.2_", fname.suffix, ".Rdata")
   myprint(fname)

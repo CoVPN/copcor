@@ -19,15 +19,25 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
   if (inherits(save.seed, "try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) } 
   
-  if (TRIAL=="janssen_partA_VL") nImp=10 
+  comp.risk=is.list(form.0)
   
-  if (TRIAL=="janssen_partA_VL" & marker.name %in% c("Day29bindSpike","Day29pseudoneutid50")) {
+  
+  if (TRIAL=="janssen_partA_VL") {
+    # number of imputation copies
+    nImp=10
+    
     # ancestral markers have different weights and ph2 indicators
-    data.ph2=subset(data, data$ph2.D29==1)
-  } else {
-    data.ph2=subset(data, data$ph2==1)
+    if (marker.name %in% c("Day29bindSpike","Day29pseudoneutid50")) {
+      data$ph2 = data$ph2.D29
+      data$wt = data$wt.D29
+    } else {
+      data$ph2 = data$ph2.D29variant
+      data$wt = data$wt.D29variant
+    }
   }
   
+  
+  data.ph2=subset(data, data$ph2==1)
   
   # used in both point est and bootstrap
   # many variables are not passed but defined in the scope of marginalized.risk.svycoxph.boot
@@ -101,7 +111,6 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   f2=as.formula(paste0("~.+",marker.name))
   
-  comp.risk=is.list(form.0)
   if (comp.risk) {
     f1=lapply(form.0, function(x) update(x, f2))
   } else {

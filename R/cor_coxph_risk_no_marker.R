@@ -29,8 +29,8 @@ cor_coxph_risk_no_marker = function(
     save.results.to,
     config,
     config.cor,
-    
     tfinal.tpeak=NULL,
+    
     dat.pla.seroneg = NULL,
     verbose=FALSE
 ) {
