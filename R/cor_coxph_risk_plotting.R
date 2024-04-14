@@ -179,11 +179,11 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
       draw.x.axis.cor(xlim, llox=lloxs[assay], if(is.delta) "delta" else llox_labels[assay])
       
       # prevalence lines
-      if (has.plac & wo.w.plac==2) abline(h=prev.plac, col="gray", lty=c(1,3,3), lwd=lwd)
+      if (has.plac & wo.w.plac==2) abline(h=prev.plac[1], col="gray", lty=c(2,3,3), lwd=lwd)
       
       # risks
       if (eq.geq==1) {
-        abline(h=prev.vacc, col="gray", lty=c(1,3,3), lwd=lwd)
+        abline(h=prev.vacc, col="darkgray", lty=c(1,3,3), lwd=lwd)
         lines(risks$marker[shown], risks$prob[shown], lwd=lwd)
         lines(risks$marker[shown], risks$lb[shown],   lwd=lwd, lty=3)
         lines(risks$marker[shown], risks$ub[shown],   lwd=lwd, lty=3)    
