@@ -1,6 +1,8 @@
 draw.x.axis.cor=function(xlim, llox, llox.label, for.ggplot=FALSE){
   
-  xx=seq(ceiling(xlim[1]), floor(xlim[2]))        
+  xx=seq(ceiling(xlim[1]), floor(xlim[2]))
+  
+  has.llox=F
   if (is.na(llox)) {
     labels = sapply (xx, function(x) if (x>=3) bquote(10^.(x)) else 10^x )
     
@@ -13,18 +15,22 @@ draw.x.axis.cor=function(xlim, llox, llox.label, for.ggplot=FALSE){
     labels = sapply (xx, function(x) if(x>=3) bquote(10^.(x)) else 10^x)
     xx=c(log10(llox), xx)
     labels=c(llox.label, labels)
+    has.llox=T
   }
   
   # add e.g. 30 between 10 and 100
   if (length(xx)<4) {
-    for (i in 1:length(xx)) {
+    for (i in ifelse(has.llox,2,1):length(xx)) {
       x=xx[i]
       xx=c(xx, x+log10(3))
       labels=c(labels, if (x>=3) bquote(3%*%10^.(x)) else 3*10^(x) )
     }
-
-    labels=c(if (min(xx)-1>=3) bquote(3%*%10^.(min(xx)-1)) else 3*10^(min(xx)-1), labels)    
-    xx=c(min(xx)-1+log10(3), xx)
+    
+    # add another tickmark at the very left
+    if (!has.llox) {
+      labels=c(if (min(xx)-1>=3) bquote(3%*%10^.(min(xx)-1)) else 3*10^(min(xx)-1), labels)    
+      xx=c(min(xx)-1+log10(3), xx)
+    }
   }
 
   if (for.ggplot) {

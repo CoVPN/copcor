@@ -51,6 +51,7 @@ myprint(has.plac, plot.geq, plot.w.plac, for.title)
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
 
 # compute prevalence
+# note that these do not have CI
 prev.vacc = if (TRIAL %in% c("janssen_partA_VL")) {
   mean(sapply(1:10, function(imp) {
     dat$EventIndOfInterest = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
@@ -85,17 +86,14 @@ lloxs=ifelse(llox_labels=="pos", assay_metadata$pos.cutoff, lloxs)
 if (TRIAL=="janssen_partA_VL") {
   # This is needed because we don't do multiple imputation when computing hist
   for(a in markers) {
-    if (!is.null(dat[[a%.%"_1"]])) {
-      dat[[a]] = dat[[a%.%"_1"]]
-      # dat[[a%.%"cat"]] = dat[[a%.%"_1cat"]]
-    }
+    if (!is.null(dat[[a%.%"_1"]])) dat[[a]] = dat[[a%.%"_1"]]
   }
 }
 
 
 
 ###################################################################################################
-# sensitivity analyses parameters
+# some parameters
 
 {
   s2="85%"; s1="15%" # these two reference quantiles are used in the next two blocks of code
@@ -162,6 +160,7 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
     
     for (a in markers) {        
       mypdf(oma=c(0,0,0,0), onefile=F, file=paste0(save.results.to, a, "_marginalized_risks", ifelse(eq.geq==1,"_eq","_geq"), ifelse(wo.w.plac==2,"","_woplacebo"), "_"%.%fname.suffix), mfrow=.mfrow)
+    
       par(las=1, cex.axis=0.9, cex.lab=1)# axis label orientation
       risks=risks.all[[a]]
       assay=marker.name.to.assay(a)
@@ -177,10 +176,10 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
            xlim=xlim, ylab=paste0("Probability* of ",config.cor$txt.endpoint," by ", tfinal.tpeak, " days post Day ", tpeak1, " Visit"), lwd=lwd, ylim=ylim, 
            type="n", main=paste0(markers.names.long[a]), xaxt="n")
       title(main=for.title, line=.6, cex.main=.9)
-      draw.x.axis.cor(xlim, lloxs[assay], if(is.delta) "delta" else llox_labels[assay])
+      draw.x.axis.cor(xlim, llox=lloxs[assay], if(is.delta) "delta" else llox_labels[assay])
       
-      # prevelance lines
-      if (has.plac) abline(h=prev.plac, col="gray", lty=c(1,3,3), lwd=lwd)
+      # prevalence lines
+      if (has.plac & wo.w.plac==2) abline(h=prev.plac, col="gray", lty=c(1,3,3), lwd=lwd)
       
       # risks
       if (eq.geq==1) {
@@ -283,7 +282,6 @@ for (a in markers) {
         data.ph2$ph2 = data.ph2$ph2.D29variant
         data.ph2$wt = data.ph2$wt.D29variant
       }
-      
       
       # multiple imputation
       out=lapply(1:10, function(imp) {
