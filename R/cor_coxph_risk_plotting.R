@@ -81,16 +81,16 @@ lloxs=ifelse(llox_labels=="lloq", lloqs, lods)
 lloxs=ifelse(llox_labels=="pos", assay_metadata$pos.cutoff, lloxs)
 
 
-## should not need this
-# if (TRIAL=="janssen_partA_VL") {
-#   # there are NA's which mess up get.marker.histogram unless we use a multi-imputed version
-#   for(a in assays) {
-#     if (!is.null(dat[["Day29"%.%a%.%"_1"]])) {
-#       dat[["Day29"%.%a]] = dat[["Day29"%.%a%.%"_1"]]
-#       dat[["Day29"%.%a%.%"cat"]] = dat[["Day29"%.%a%.%"_1cat"]]
-#     }
-#   }
-# } 
+
+if (TRIAL=="janssen_partA_VL") {
+  # This is needed because we don't do multiple imputation when computing hist
+  for(a in markers) {
+    if (!is.null(dat[[a%.%"_1"]])) {
+      dat[[a]] = dat[[a%.%"_1"]]
+      # dat[[a%.%"cat"]] = dat[[a%.%"_1cat"]]
+    }
+  }
+}
 
 
 
