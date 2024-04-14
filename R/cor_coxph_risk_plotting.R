@@ -148,7 +148,7 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
           shown=risks$marker>=wtd.quantile(dat[[a]], dat$wt, 2.5/100) & risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
           risks$prob[shown]
         }))
-        ylim=range(ylim, prev.vacc, 0, if(wo.w.plac==1) prev.plac)
+        ylim=range(ylim, prev.vacc, 0, if(wo.w.plac==2) prev.plac)
       }
       ylims.cor[[eq.geq]][[wo.w.plac]]=ylim
     }
@@ -418,7 +418,10 @@ for (a in markers) {
   if(length(out)==1) empty.plot() else {
     
     # the first point is (tpeaklag, 0)
-    mymatplot(c(tpeaklag, out$time[out$time<=tfinal.tpeak]), rbind(0,out$risk[out$time<=tfinal.tpeak,]), lty=1:3, col=c("green3","green","darkgreen"), 
+    mymatplot(c(tpeaklag, out$time[out$time<=tfinal.tpeak]), 
+              rbind(0,out$risk[out$time<=tfinal.tpeak,]), 
+              lty=c(1, if(has.3.levels) 2, 3), 
+              col=c("green3",if(has.3.levels) "green","darkgreen"), 
               type="l", lwd=lwd, make.legend=F, ylab=paste0("Probability* of ",config.cor$txt.endpoint), ylim=ylim, xlab="", las=1, 
               xlim=c(tpeaklag,tfinal.tpeak), at=x.time, xaxt="n")
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
@@ -426,8 +429,9 @@ for (a in markers) {
     title(main=for.title, cex.main=.9, line=.6)
     mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
                                  .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
-    legend=c("Vaccine low","Vaccine medium","Vaccine high", if(has.plac) "Placebo")
-    mylegend(x=1, legend=legend, lty=c(1:3,if(has.plac) 1), col=c("green3","green","darkgreen",if(has.plac) "gray"), lwd=2)
+    legend=c("Vaccine low", if(has.3.levels) "Vaccine medium","Vaccine high", if(has.plac) "Placebo")
+    mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
+             col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2)
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
   }
   
