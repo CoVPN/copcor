@@ -1,4 +1,3 @@
-###################################################################################################
 # bootstrap marginalized risks
 # type: 
 #    1 for S=s
@@ -7,10 +6,16 @@
 # data: ph1 data
 # t: a time point near to the time of the last observed outcome will be defined
 
+
+# competing risk is handled transparently through form.0
+# multiple imputation is hardcoded by TRIAL
+
+
 # janssen_partA_VL handling is hard coded. 
-#   ph2 depends on marker. fortunately only have to take care of competing risk implementation
 #   outcome is multiple imputed; depends on variant, which is defined globally
 #   marker is multiple imputed
+#   ph2 and wt depends on marker
+
 
 marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, ci.type="quantile", numCores=1) {
 #marker.name=a; type=1; data=dat.vac.seroneg; t=tfinal.tpeak; B=B; ci.type="quantile"; numCores=1
@@ -20,7 +25,6 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   if (inherits(save.seed, "try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) } 
   
   comp.risk=is.list(form.0)
-  
   
   if (TRIAL=="janssen_partA_VL") {
     # number of imputation copies
@@ -240,14 +244,8 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
     
     dat.b.ph2=subset(dat.b, dat.b$ph2==1)  
     
-    ## also need to check marker, too complicated, thus commented out
-    # # if there is no missing variant info in a bootstrap dataset, only need to run the MI code once
-    # if (TRIAL %in% c("janssen_partA_VL")) {
-    #   nImp = ifelse(any(with(subset(dat.b.ph2, dat.b.ph2$EventIndPrimary==1), is.na(seq1.variant))), nImp, 1)
-    # }
-    
-    if(type==1) {
-      # conditional on s
+    if(type==1) { # conditional on s
+      
       if (TRIAL %in% c("janssen_partA_VL")) {
         # multiple imputation
         rowMeans(sapply(1:nImp, function(imp) {

@@ -1,4 +1,9 @@
-#### ##########################################################################
+# competing risk is handled transparently within get.marginalized.risk.no.marker through form.0
+# multiple imputation is hardcoded by TRIAL
+# be careful when there is competing risk and case-control sampling, the sampling code may need to be changed
+
+
+
 # validation code
 
 #fit.ve = coxph(Surv(EventTimePrimary, EventIndPrimary) ~ Trt, subset(dat_proc, ph1==1)) 
@@ -31,21 +36,22 @@ cor_coxph_risk_no_marker = function(
     config.cor,
     tfinal.tpeak=NULL,
     
-    dat.pla.seroneg = NULL,
+    dat.plac = NULL,
     verbose=FALSE
 ) {
     
     if (is.null(tfinal.tpeak)) tfinal.tpeak=config.cor$tfinal.tpeak
+    if (is.null(tfinal.tpeak)) stop("tfinal.tpeak should be passed in or in config.cor")
     
     fname=paste0(save.results.to, "marginalized.risk.no.marker.",fname.suffix,".Rdata")
     
-    vacc.only=is.null(dat.pla.seroneg)
+    vacc.only=is.null(dat.plac)
     
     if(!file.exists(fname)) {    
         cat("Bootstrap marginalized risks using models without markers ...\n")
         
         for (.trt in ifelse(vacc.only, 1, 0):1) {
-            dat.tmp=if(.trt==1) dat else dat.pla.seroneg
+            dat.tmp=if(.trt==1) dat else dat.plac
                     
             prob = if (TRIAL %in% c("janssen_partA_VL")) {
                 mean(sapply(1:10, function(imp) {
@@ -66,11 +72,15 @@ cor_coxph_risk_no_marker = function(
         
             # if mc.cores is >1 here, the process will be stuck in coxph for some unknown reason
             out=mclapply(1:config$num_boot_replicates, mc.cores = 1, FUN=function(seed) {  
+                
                 if (verbose>=2) myprint(seed) 
                 if(config$sampling_scheme == 'case_cohort') {
                     dat.b = get.bootstrap.data.cor (dat.tmp, ptids.by.stratum, seed) 
+                
                 } else if(config$sampling_scheme == 'case_control') {
-                    dat.b = bootstrap.case.control.samples(dat.ph1=dat.tmp, seed, delta.name="EventIndPrimary", strata.name="tps.stratum", ph2.name="ph2", min.cell.size=0) 
+                    dat.b = bootstrap.case.control.samples(dat.ph1=dat.tmp, seed, 
+                                        delta.name="EventIndPrimary", strata.name="tps.stratum", ph2.name="ph2", min.cell.size=0) 
+            
                 } else stop("sampling_scheme not supported: "%.%config$sampling_scheme)
                 
                 prob = if (TRIAL %in% c("janssen_partA_VL")) {

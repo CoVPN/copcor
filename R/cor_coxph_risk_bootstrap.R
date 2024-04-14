@@ -1,3 +1,7 @@
+# competing risk is handled transparently through form.0, e.g., within marginalized.risk.svycoxph.boot
+# multiple imputation is hardcoded by TRIAL, e.g. within marginalized.risk.svycoxph.boot
+
+
 cor_coxph_risk_bootstrap = function(
   form.0,
   dat,
@@ -5,8 +9,9 @@ cor_coxph_risk_bootstrap = function(
   save.results.to,
   config,
   config.cor,
-  all.markers,
   tfinal.tpeak=NULL,
+  
+  markers,
   
   run.Sgts=T, # whether to get risk conditional on continuous S>=s
   verbose=FALSE
@@ -14,13 +19,13 @@ cor_coxph_risk_bootstrap = function(
   
 print("cor_coxph_risk_bootstrap")
   
+comp.risk=is.list(form.0) # competing risk
+  
 tpeak=config.cor$tpeak
 
 numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows", 1, min(20, config$num_boot_replicates, future::availableCores())))
 
 B=config$num_boot_replicates
-
-comp.risk=is.list(form.0) # competing risk
 
 # get tfinal.tpeak
 if (is.null(tfinal.tpeak)) tfinal.tpeak=config.cor$tfinal.tpeak
@@ -36,11 +41,11 @@ fname = paste0(save.results.to, "risks.all.1_", fname.suffix, ".Rdata")
 myprint(fname)
   
 if(!file.exists(fname)) {    
-  risks.all.1=lapply(all.markers, function (a) {
+  risks.all.1=lapply(markers, function (a) {
     if(verbose) myprint(a)
     marginalized.risk.svycoxph.boot(form.0, marker.name=a, type=1, data=dat, t=tfinal.tpeak, B=B, ci.type="quantile", numCores=numCores)
   })
-  names(risks.all.1)=all.markers
+  names(risks.all.1)=markers
   save(risks.all.1, file=fname)
 } else {
   load(fname)
@@ -58,11 +63,11 @@ fname = paste0(save.results.to, "risks.all.3_", fname.suffix, ".Rdata")
 myprint(fname)
 
 if(!file.exists(fname)) {    
-  risks.all.3=lapply(all.markers, function (a) {
+  risks.all.3=lapply(markers, function (a) {
     if(verbose) myprint(a)
     marginalized.risk.svycoxph.boot(form.0, marker.name=a%.%"cat", type=3, data=dat, t=tfinal.tpeak, B=B, ci.type="quantile", numCores=numCores)                
   })    
-  names(risks.all.3)=all.markers
+  names(risks.all.3)=markers
   save(risks.all.3, file=fname)
 } else {
   load(fname)
@@ -80,11 +85,11 @@ if (run.Sgts) {
   
   
   if(!file.exists(fname)) {    
-    risks.all.2=lapply(all.markers, function (a) {
+    risks.all.2=lapply(markers, function (a) {
       if(verbose) myprint(a)
       marginalized.risk.svycoxph.boot(form.0, marker.name=a, type=2, data=dat, tfinal.tpeak, B=B, ci.type="quantile", numCores=numCores)
     }) 
-    names(risks.all.2)=all.markers
+    names(risks.all.2)=markers
     save(risks.all.2, file=fname)
   } else {
     load(fname)
