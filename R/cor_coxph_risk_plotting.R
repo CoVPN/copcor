@@ -135,7 +135,8 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
     risks.all=get("risks.all."%.%eq.geq)
     
     if (!create.ylims.cor) {
-      ylim=ylims.cor[[eq.geq]][[wo.w.plac]] 
+      ylim=ylims.cor[[eq.geq]][[wo.w.plac]]
+      
     } else {
       if(verbose>=2) print("no ylims.cor found")        
       if (eq.geq==2 & wo.w.plac==1) {
@@ -145,8 +146,13 @@ for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo li
       } else {
         ylim = range(lapply(markers, function(a) {
           risks=risks.all[[a]]
-          shown=risks$marker>=wtd.quantile(dat[[a]], dat$wt, 2.5/100) & risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
-          risks$prob[shown]
+          # in some datasets, not all markers have risks
+          if (!is.null(risks)) {
+            shown=risks$marker>=wtd.quantile(dat[[a]], dat$wt, 2.5/100) & risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
+            risks$prob[shown]
+          } else {
+            NULL
+          }
         }))
         ylim=range(ylim, prev.vacc, 0, if(wo.w.plac==2) prev.plac)
       }
@@ -427,8 +433,11 @@ for (a in markers) {
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=markers.names.long[a], cex.main=.9, line=2)
     title(main=for.title, cex.main=.9, line=.6)
-    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
-                                 .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
+    if (has.3.levels)
+      mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
+                                   .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
+    else 
+      mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
     legend=c("Vaccine low", if(has.3.levels) "Vaccine medium","Vaccine high", if(has.plac) "Placebo")
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
              col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2)
@@ -613,13 +622,17 @@ for (a in markers) {
   
   mtext("No. at risk",side=1,outer=FALSE,line=2.5,at=tpeaklag-2,adj=0,cex=cex.text)
   mtext(paste0("Low:"),side=1,outer=F,line=3.4,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.L,side=1,outer=FALSE,line=3.4,at=x.time.1,cex=cex.text)
-  mtext(paste0("Med:"),side=1,outer=F,line=4.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.M,side=1,outer=FALSE,line=4.3,at=x.time.1,cex=cex.text)
+  if (has.3.levels) {
+    mtext(paste0("Med:"),side=1,outer=F,line=4.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.M,side=1,outer=FALSE,line=4.3,at=x.time.1,cex=cex.text)
+  }
   mtext(paste0("High:"),side=1,outer=F,line=5.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.H,side=1,outer=FALSE,line=5.2,at=x.time.1,cex=cex.text)
   mtext(paste0("Plac:"),side=1,outer=F,line=6.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=6.2,at=x.time.1,cex=cex.text)
   
   mtext(paste0("Cumulative No. of ",config.cor$txt.endpoint," Endpoints"),side=1,outer=FALSE,line=7.4,at=tpeaklag-2,adj=0,cex=cex.text)
   mtext(paste0("Low:"),side=1,outer=FALSE,line=8.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.L,side=1,outer=FALSE,line=8.3, at=x.time.1,cex=cex.text)
-  mtext(paste0("Med:"),side=1,outer=FALSE,line=9.2,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.M,side=1,outer=FALSE,line=9.2 ,at=x.time.1,cex=cex.text)
+  if (has.3.levels) {
+    mtext(paste0("Med:"),side=1,outer=FALSE,line=9.2,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.M,side=1,outer=FALSE,line=9.2 ,at=x.time.1,cex=cex.text)
+  }
   mtext(paste0("High:"),side=1,outer=FALSE,line=10.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.H,side=1,outer=FALSE,line=10.1,at=x.time.1,cex=cex.text)
   mtext(paste0("Plac:"),side=1,outer=FALSE,line=11.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=11.1,at=x.time.1,cex=cex.text)
   
