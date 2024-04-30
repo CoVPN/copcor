@@ -43,7 +43,7 @@ cor_coxph_coef_1 = function(
   for (a in all.markers) {
     f = update(form.0, as.formula(paste0("~.+", a)))
     if (tps) {
-      fits[[a]]=svycoxph(f, design=design_or_dat) 
+      f=svycoxph(f, design=design_or_dat) 
     } else {
       fits[[a]]=coxph(f, design_or_dat) 
     }

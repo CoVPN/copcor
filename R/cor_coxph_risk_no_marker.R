@@ -1,30 +1,25 @@
 # competing risk is handled transparently within get.marginalized.risk.no.marker through form.0
-# multiple imputation is hardcoded by TRIAL
+# multiple imputation is hard-coded by TRIAL
 # be careful when there is competing risk and case-control sampling, the sampling code may need to be changed
 
-
-
-# validation code
+# test code
+# the point estimate match the results from bootstrap
+# the asymptotic variance should be close to bootstrap-based results
+# prevs=sapply (c(placebo=0, vaccine=1), function(i) {
+   dat.tmp=subset(dat_proc, Trt==i & Bserostatus==0 & ph1)
+   fit.tmp = coxph(form.0, dat.tmp, model=T) # model=T to make predict possible
+   dat.tmp[[config.cor$EventTimePrimary]]=tfinal.tpeak
+   pred.tmp=predict(fit.tmp, newdata=dat.tmp, type="expected", se.fit=T)
+   sd.tmp=exp(mean(log(pred.tmp$se.fit)))
+   prev=c(est=NA, "2.5%"=NA, "97.5%"=NA)
+   prev[1] = mean (1 - exp(-pred.tmp$fit))
+   prev[2:3] = prev[1] + c(-1,1)*1.96*sd.tmp
+   prev
+# })
+# prevs
 
 #fit.ve = coxph(Surv(EventTimePrimary, EventIndPrimary) ~ Trt, subset(dat_proc, ph1==1)) 
 #summary(fit.ve)
-
-# these results are close to bootstrap results. they are not used later and only for sanity check
-# compute overall risk regardless of markers in both arms by integrating over form.0.
-# the point estimate matche the results from bootstrap
-# the variance is asymptotic and still needs to be figured out
-# prevs=sapply (c(placebo=0, vaccine=1), function(i) {
-#    dat.tmp=subset(dat_proc, Trt==i & Bserostatus==0 & ph1)
-#    fit.tmp = coxph(form.0, dat.tmp, model=T) # model=T to make predict possible
-#    dat.tmp[[config.cor$EventTimePrimary]]=tfinal.tpeak
-#    pred.tmp=predict(fit.tmp, newdata=dat.tmp, type="expected", se.fit=T)
-#    sd.tmp=exp(mean(log(pred.tmp$se.fit)))
-#    prev=c(est=NA, "2.5%"=NA, "97.5%"=NA)
-#    prev[1] = mean (1 - exp(-pred.tmp$fit))
-#    #prev[2:3] = prev[1] + c(-1,1)*1.96*sd.tmp
-#    prev
-# })
-# prevs
 
 
 cor_coxph_risk_no_marker = function(
