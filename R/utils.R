@@ -70,7 +70,7 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
 
 
 
-add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt") {
+add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt", verbose=F) {
   
   if(is.null(dat[[wt.col.name]])) stop("col does not exist: "%.%wt.col.name) 
   if(is.null(dat[[ph2.col.name]])) stop("col does not exist: "%.%ph2.col.name) 
@@ -82,10 +82,20 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
     marker.cutpoints <- attr(dat, "marker.cutpoints")    
   }
   
-  
   for (a in markers) {
     
-    if (verbose) myprint(a, newline=F)
+    if (verbose) myprint(a, newline=T)
+    
+    if (is.null(dat[[a %.% "cat"]])) {
+      new.col = T
+      # if a new column, will return a column of factor
+
+    } else {
+      new.col = F
+      # if not a new column, will return a column of type character
+      dat[[a %.% "cat"]] = as.character(dat[[a %.% "cat"]])
+    }
+    
     tmp.a=dat[[a]]
     
     # if we estimate cutpoints using all non-NA markers, it may have an issue when a lot of subjects outside ph2 have non-NA markers
@@ -99,6 +109,8 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
       flag=as.logical(dat[[ph2.col.name]])
     }
     
+    # set it to NA so that it won't interfere with table
+    tmp.a[!flag]=NA
     
     if(startsWith(a, "Delta")) {
       # fold change
@@ -115,8 +127,7 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
       myprint(pos.rate)
       
       binary.cut=FALSE
-      
-      if (mean(tmp.a>uppercut, na.rm=T)>1/3) {
+      if (mean(tmp.a[flag]>uppercut, na.rm=T)>1/3) {
         # if more than 1/3 of vaccine recipients have value > ULOQ, let q.a be (median among those < ULOQ, ULOQ)
         if (verbose) cat("more than 1/3 of vaccine recipients have value > ULOQ\n")
         q.a=c(wtd.quantile(tmp.a[dat[[a]]<=uppercut & flag], weights = dat[[wt.col.name]][tmp.a<=uppercut & flag], probs = c(1/2)),  uppercut)
@@ -152,23 +163,30 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
       failed = FALSE
     }
     
-    if(!failed) {
-      dat[[a %.% "cat"]] <- tmp
-      marker.cutpoints[[a]] <- q.a
-      
-    } else {
+    if(failed) {
       cat("\nfirst cut fails, call cut again with breaks=3 \n")
       # cut is more robust but it does not incorporate weights
       tmp=cut(tmp.a, breaks=3)
       stopifnot(length(table(tmp))==3)
+    }
+    
+    if(new.col) {
       dat[[a %.% "cat"]] = tmp
+      
       # extract cut points from factor level labels
+      # marker.cutpoints[[a]] <- q.a
       tmpname = names(table(tmp))[2]
       tmpname = substr(tmpname, 2, nchar(tmpname)-1)
       marker.cutpoints[[a]] <- as.numeric(strsplit(tmpname, ",")[[1]])
+      
+    } else {
+      # only touch values in ph2
+      dat[[a %.% "cat"]][flag] = as.character(tmp[flag])
+      
     }
     
-    stopifnot(binary.cut | length(table(dat[[a %.% "cat"]])) == 3)
+    stopifnot(binary.cut | length(table(tmp)) == 3)
+    
     if(verbose) {
       print(table(dat[[a %.% "cat"]]))
       cat("\n")
