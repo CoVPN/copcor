@@ -441,18 +441,19 @@ for (a in markers) {
     # }
     
     if(has.3.levels) {
-      legend=c(paste0("Vaccine low (<",  format(10^q.a[1], scientific=T), ")"), 
-               paste0("Vaccine medium (", format(10^q.a[1], scientific=T), " to ",format(10^q.a[2], scientific=T), ")"),
-               paste0("Vaccine high (>=",format(10^q.a[2], scientific=T),")"),
+      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), ")"), 
+               paste0("Vaccine medium (", pretty.print(10^q.a[1]), " to ",
+                                          pretty.print(10^q.a[2]), ")"),
+               paste0("Vaccine high (>=", pretty.print(10^q.a[2]), ")"),
                if(has.plac) "Placebo")
     } else {
-      legend=c(paste0("Vaccine low (<",  format(10^q.a[1], scientific=T), ")"), 
-               paste0("Vaccine high (>=",format(10^q.a[1], scientific=T), ")"), 
+      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]),")"), 
+               paste0("Vaccine high (>=", pretty.print(10^q.a[1]),")"), 
                if(has.plac) "Placebo")
       
     }
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
-             col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2)
+             col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2, cex=.8)
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
   }
   
