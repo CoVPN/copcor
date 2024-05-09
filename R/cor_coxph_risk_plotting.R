@@ -406,6 +406,8 @@ if (config$is_ows_trial) {
 #
 if(.mfrow[1]==1)  height=7.5/2*1.5 else height=7.5/2*.mfrow[1]*1.3
 
+assay_units = sapply(assay_metadata$assay_label_short, function(x) gsub("\\(|\\)", "", regmatches(x, gregexpr("\\((.*?)\\)", x))[[1]]))
+names(assay_units)=assay_metadata$assay
 
 for (a in markers) {        
   mypdf(oma=c(1,0,0,0), onefile=F, file=paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix), mfrow=.mfrow, mar=c(12,4,5,2))
@@ -413,6 +415,8 @@ for (a in markers) {
   
   marker.name=a%.%"cat"    
   myprint(a)
+  
+  assay_unit = assay_units[marker.name.to.assay(a)]
   
   has.3.levels = length(levels(dat[[marker.name]]))==3
   
@@ -441,14 +445,14 @@ for (a in markers) {
     # }
     
     if(has.3.levels) {
-      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), ")"), 
+      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), " ", assay_unit, ")"), 
                paste0("Vaccine medium (", pretty.print(10^q.a[1]), " to ",
-                                          pretty.print(10^q.a[2]), ")"),
-               paste0("Vaccine high (>=", pretty.print(10^q.a[2]), ")"),
+                                          pretty.print(10^q.a[2]), " ", assay_unit,")"),
+               paste0("Vaccine high (>=", pretty.print(10^q.a[2]), " ", assay_unit,")"),
                if(has.plac) "Placebo")
     } else {
-      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]),")"), 
-               paste0("Vaccine high (>=", pretty.print(10^q.a[1]),")"), 
+      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), " ", assay_unit, ")"), 
+               paste0("Vaccine high (>=", pretty.print(10^q.a[1]), " ", assay_unit, ")"), 
                if(has.plac) "Placebo")
       
     }
