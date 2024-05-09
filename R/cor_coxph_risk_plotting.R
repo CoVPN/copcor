@@ -241,7 +241,7 @@ save(ylims.cor, file=paste0(save.results.to, "ylims.cor_"%.%fname.suffix%.%".Rda
 risks.all=get("risks.all.1") 
 for (a in markers) {
   risks=risks.all[[a]]
-  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
+  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "50.0%", "90.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
   tmp=10**risks$marker[table.order]
   tmp=ifelse(tmp<100, signif(tmp,3), round(tmp))
   out=with(risks, cbind("s"=tmp, "Estimate"=paste0(formatDouble(prob[table.order],digits.risk), " (", formatDouble(lb[table.order],digits.risk), ",", formatDouble(ub[table.order],digits.risk), ")")))
@@ -249,9 +249,9 @@ for (a in markers) {
   tab=cbind(out[1:(nrow(out)/4), ], out[1:(nrow(out)/4)+(nrow(out)/4), ], out[1:(nrow(out)/4)+(nrow(out)/4*2), ], out[1:(nrow(out)/4)+(nrow(out)/4*3), ])
   mytex(tab, file.name=paste0(a, "_marginalized_risks_eq", "_"%.%fname.suffix), align="c", include.colnames = T, save2input.only=T, input.foldername=save.results.to, include.rownames = F,
         longtable=T, caption.placement = "top", label=paste0("tab marginalized_risks_eq ", fname.suffix), caption=paste0("Marginalized cumulative risk by Day ",tfinal.tpeak," as functions of Day ",
-                                                                                                                tpeak, " ", markers.names.short[a], " (=s) among baseline negative vaccine recipients with 95\\% bootstrap point-wise confidence intervals (",
-                                                                                                                ncol(risks.all[[1]]$boot)," replicates). ",
-                                                                                                                "Last four values correspond to 2.5\\%, 5.0\\%, 95.0\\%, 97.5\\%, respectively.")
+            tpeak, " ", markers.names.short[a], " (=s) among baseline negative vaccine recipients with 95\\% bootstrap point-wise confidence intervals (",
+            ncol(risks.all[[1]]$boot)," replicates). ",
+            "Last six values correspond to 2.5\\%, 5.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
         #, col.headers=paste0("\\hline\n", concatList(paste0("\\multicolumn{2}{c}{", labels.axis[1,], "}"), "&"), "\\\\\n")
   )
 }
@@ -263,7 +263,7 @@ cat("plot marginalized risk curves over time for trichotomized markers\n")
 
 # no bootstrap
 
-data.ph2<- dat[dat$ph2==1,]
+data.ph2 <- dat[dat$ph2==1,]
 
 risks.all.ter=list()
 for (a in markers) {        
@@ -433,11 +433,12 @@ for (a in markers) {
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=markers.names.long[a], cex.main=.9, line=2)
     title(main=for.title, cex.main=.9, line=.6)
-    if (has.3.levels)
+    if (has.3.levels) {
       mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
                                    .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
-    else 
+    } else { 
       mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
+    }
     legend=c("Vaccine low", if(has.3.levels) "Vaccine medium","Vaccine high", if(has.plac) "Placebo")
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
              col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2)
@@ -740,7 +741,8 @@ for (eq.geq in curve.set) {
     
     # load risks
     risks=get("risks.all."%.%ifelse(eq.geq==2,2,1))[[a]]   
-    table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
+    table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "50.0%", "90.0%", "95.0%", "97.5%")); 
+    table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
     
     #xlim=quantile(dat[["Day"%.%tpeak%.%a]],if(eq.geq==1) c(.025,.975) else c(0,.95),na.rm=T)
     if (!is.delta) xlim=get.range.cor(dat, assay, tpeak) else xlim=range(dat[[a]], na.rm=T)            
@@ -878,7 +880,7 @@ for (eq.geq in curve.set) {
             longtable=T, caption.placement = "top", label=paste0("tab controlled_ve_sens_eq ", fname.suffix), caption=paste0("Controlled VE with sensitivity analysis as functions of Day ",
                                                                                                                     tpeak," ", markers.names.short[a], " (=s) among baseline negative vaccine recipients with 95\\% bootstrap point-wise confidence intervals (",
                                                                                                                     ncol(risks.all[[1]]$boot)," replicates). ",
-                                                                                                                    "Last four values correspond to 2.5\\%, 5.0\\%, 95.0\\%, 97.5\\%, respectively.")
+                                                                                                                    "Last six values correspond to 2.5\\%, 5.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
             #, col.headers=paste0("\\hline\n", concatList(paste0("\\multicolumn{2}{c}{", labels.axis[1,], "}"), "&"), "\\\\\n")
       )
     }
@@ -892,7 +894,8 @@ digits.risk=4
 risks.all=get("risks.all.1")
 for(a in markers) {        
   risks=risks.all[[a]]
-  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
+  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "50.0%", "90.0%", "95.0%", "97.5%"))
+  table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
   
   est = 1 - risks$prob/res.plac.cont["est"]
   boot = 1 - t( t(risks$boot)/res.plac.cont[2:(1+ncol(risks$boot))] )                         
@@ -920,7 +923,7 @@ for(a in markers) {
                                            formatDouble(prev.vacc[1], 3, remove.leading0=F)," in vaccine recipients compared to ",
                                            formatDouble(prev.plac[1], 3, remove.leading0=F)," in placebo recipients, with cumulative vaccine efficacy ",
                                            formatDouble(overall.ve[1]*100,1),"\\% (95\\% CI ",formatDouble(overall.ve[2]*100,1)," to ",formatDouble(overall.ve[3]*100,1),"\\%). "),
-                       "Last four values correspond to 2.5\\%, 5.0\\%, 95.0\\%, 97.5\\%, respectively.")
+                       "Last six values correspond to 2.5\\%, 5.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
         #, col.headers=paste0("\\hline\n", concatList(paste0("\\multicolumn{2}{c}{", labels.axis[1,], "}"), "&"), "\\\\\n")
   )
   
