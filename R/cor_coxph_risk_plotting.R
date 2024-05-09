@@ -433,13 +433,24 @@ for (a in markers) {
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=markers.names.long[a], cex.main=.9, line=2)
     title(main=for.title, cex.main=.9, line=.6)
-    if (has.3.levels) {
-      mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
-                                   .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
-    } else { 
-      mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
+    # if (has.3.levels) {
+    #   mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
+    #                                .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
+    # } else { 
+    #   mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
+    # }
+    
+    if(has.3.levels) {
+      legend=c(paste0("Vaccine low (<",  format(10^q.a[1], scientific=T), ")"), 
+               paste0("Vaccine medium (", format(10^q.a[1], scientific=T), " to ",format(10^q.a[2], scientific=T), ")"),
+               paste0("Vaccine high (>=",format(10^q.a[2], scientific=T),")"),
+               if(has.plac) "Placebo")
+    } else {
+      legend=c(paste0("Vaccine low (<",  format(10^q.a[1], scientific=T), ")"), 
+               paste0("Vaccine high (>=",format(10^q.a[1], scientific=T), ")"), 
+               if(has.plac) "Placebo")
+      
     }
-    legend=c("Vaccine low", if(has.3.levels) "Vaccine medium","Vaccine high", if(has.plac) "Placebo")
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
              col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2)
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
