@@ -406,7 +406,11 @@ if (config$is_ows_trial) {
 #
 if(.mfrow[1]==1)  height=7.5/2*1.5 else height=7.5/2*.mfrow[1]*1.3
 
-assay_units = sapply(assay_metadata$assay_label_short, function(x) gsub("\\(|\\)", "", regmatches(x, gregexpr("\\((.*?)\\)", x))[[1]]))
+assay_units = sapply(assay_metadata$assay_label_short, function(x) {
+  out = gsub("\\(|\\)", "", regmatches(x, gregexpr("\\((.*?)\\)", x))[[1]])
+  if (length(out)==0) out=""
+  out
+})
 names(assay_units)=assay_metadata$assay
 
 for (a in markers) {        
