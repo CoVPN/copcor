@@ -420,8 +420,6 @@ for (a in markers) {
   marker.name=a%.%"cat"    
   myprint(a)
   
-  assay_unit = assay_units[marker.name.to.assay(a)]
-  
   has.3.levels = length(levels(dat[[marker.name]]))==3
   
   out=risks.all.ter[[a]]
@@ -448,15 +446,17 @@ for (a in markers) {
     #   mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
     # }
     
+    assay_unit = paste0(" ", assay_units[marker.name.to.assay(a)])
+    
     if(has.3.levels) {
-      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), " ", assay_unit, ")"), 
+      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
                paste0("Vaccine medium (", pretty.print(10^q.a[1]), " to ",
-                                          pretty.print(10^q.a[2]), " ", assay_unit,")"),
-               paste0("Vaccine high (>=", pretty.print(10^q.a[2]), " ", assay_unit,")"),
+                                          pretty.print(10^q.a[2]), assay_unit,")"),
+               paste0("Vaccine high (>=", pretty.print(10^q.a[2]), assay_unit,")"),
                if(has.plac) "Placebo")
     } else {
-      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), " ", assay_unit, ")"), 
-               paste0("Vaccine high (>=", pretty.print(10^q.a[1]), " ", assay_unit, ")"), 
+      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
+               paste0("Vaccine high (>=", pretty.print(10^q.a[1]), assay_unit, ")"), 
                if(has.plac) "Placebo")
       
     }

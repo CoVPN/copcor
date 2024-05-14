@@ -87,7 +87,7 @@ cor_coxph_coef_1 = function(
   fits.tri=list()
   for (a in all.markers) {
     if(verbose>=2) myprint(a)
-    f= update(form.0, as.formula(paste0("~.+", a, "cat")))
+    f = update(form.0, as.formula(paste0("~.+", a, "cat")))
     if (tps) {
       fits.tri[[a]]=svycoxph(f, design=design_or_dat) 
     } else {
