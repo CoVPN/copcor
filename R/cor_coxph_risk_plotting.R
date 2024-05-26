@@ -30,7 +30,9 @@ cor_coxph_risk_plotting = function(
   plot.geq = F, # whether to plot risk vs S>=s
   plot.w.plac = T, # whether to plot a version with plac line
   for.title="",
-  verbose=FALSE
+  verbose=FALSE, 
+  
+  trichotomized.only=FALSE
 ) {
 
 if(verbose) print("Running cor_coxph_risk_plotting")
@@ -123,139 +125,6 @@ if (TRIAL=="janssen_partA_VL") {
   #   dat$yy = ifelse(dat$EventIndPrimary==1, 1, 0)
   # }
 }
-
-
-###################################################################################################
-cat("plot marginalized risk curves for continuous markers\n")
-
-for (eq.geq in 1:eq.geq.ub) {  # 1 conditional on s,   2 is conditional on S>=s
-for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo lines. Implementation-wise, the main difference is in ylim
-    # eq.geq=1; wo.w.plac=2; a=markers[1]
-    
-    risks.all=get("risks.all."%.%eq.geq)
-    
-    if (!create.ylims.cor) {
-      ylim=ylims.cor[[eq.geq]][[wo.w.plac]]
-      
-    } else {
-      if(verbose>=2) print("no ylims.cor found")        
-      if (eq.geq==2 & wo.w.plac==1) {
-        # later values in prob may be wildly large due to lack of samples
-        ylim=range(sapply(risks.all, function(x) x$prob[1]), if(wo.w.plac==2) prev.plac, prev.vacc, 0)
-        # may need to add some white space at the top to write placebo overall risk
-      } else {
-        ylim = range(lapply(markers, function(a) {
-          risks=risks.all[[a]]
-          # in some datasets, not all markers have risks
-          if (!is.null(risks)) {
-            shown=risks$marker>=wtd.quantile(dat[[a]], dat$wt, 2.5/100) & risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
-            risks$prob[shown]
-          } else {
-            NULL
-          }
-        }))
-        ylim=range(ylim, prev.vacc, 0, if(wo.w.plac==2) prev.plac)
-      }
-      ylims.cor[[eq.geq]][[wo.w.plac]]=ylim
-    }
-    # the following is commented out because it depends on COR
-    # make the ylim look comparable to ID50 in this trial
-    # if (attr(config,"config")=="azd1222_bAb" & eq.geq==1 & wo.w.plac==2 & COR=="D57") ylim=c(0,0.05)    
-    if(verbose>=2) myprint(ylim)
-    lwd=2
-    
-    for (a in markers) {        
-      mypdf(oma=c(0,0,0,0), onefile=F, file=paste0(save.results.to, a, "_marginalized_risks", ifelse(eq.geq==1,"_eq","_geq"), ifelse(wo.w.plac==2,"","_woplacebo"), "_"%.%fname.suffix), mfrow=.mfrow)
-    
-      par(las=1, cex.axis=0.9, cex.lab=1)# axis label orientation
-      risks=risks.all[[a]]
-      assay=marker.name.to.assay(a)
-      is.delta=startsWith(a,"Delta")
-      
-      ncases=sapply(risks$marker, function(s) sum(dat$yy[dat[[a]]>=s], na.rm=T))
-      
-      if (!is.delta) xlim=get.range.cor(dat, assay, tpeak) else xlim=range(dat[[a]], na.rm=T)
-      shown=risks$marker>=ifelse(study_name=="COVE",log10(10),wtd.quantile(dat[[a]], dat$wt, 2.5/100)) & 
-        risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
-      plot(risks$marker[shown], risks$prob[shown], 
-           xlab=markers.names.short[a]%.%ifelse(eq.geq==1," (=s)"," (>=s)"), 
-           xlim=xlim, ylab=paste0("Probability* of ",config.cor$txt.endpoint," by ", tfinal.tpeak, " days post Day ", tpeak1, " Visit"), lwd=lwd, ylim=ylim, 
-           type="n", main=paste0(markers.names.long[a]), xaxt="n")
-      title(main=for.title, line=.6, cex.main=.9)
-      draw.x.axis.cor(xlim, llox=lloxs[assay], if(is.delta) "delta" else llox_labels[assay])
-      
-      # prevalence lines
-      if (has.plac & wo.w.plac==2) abline(h=prev.plac[1], col="gray", lty=c(2,3,3), lwd=lwd)
-      
-      # risks
-      if (eq.geq==1) {
-        abline(h=prev.vacc, col="darkgray", lty=c(1,3,3), lwd=lwd)
-        lines(risks$marker[shown], risks$prob[shown], lwd=lwd)
-        lines(risks$marker[shown], risks$lb[shown],   lwd=lwd, lty=3)
-        lines(risks$marker[shown], risks$ub[shown],   lwd=lwd, lty=3)    
-        img.dat=cbind(risks$marker[shown], risks$prob[shown], risks$lb[shown], risks$ub[shown])
-      } else {
-        abline(h=prev.vacc[1], col="gray", lty=c(1), lwd=lwd)
-        lines(risks$marker[ncases>=5], risks$prob[ncases>=5], lwd=lwd)
-        lines(risks$marker[ncases>=5], risks$lb[ncases>=5],   lwd=lwd, lty=3)
-        lines(risks$marker[ncases>=5], risks$ub[ncases>=5],   lwd=lwd, lty=3)    
-        img.dat=cbind(risks$marker[ncases>=5], risks$prob[ncases>=5], risks$lb[ncases>=5], risks$ub[ncases>=5])
-      }
-      
-      # save to satisfy some journal requirements
-      if(wo.w.plac==2) mywrite.csv(img.dat, file=paste0(save.results.to, a, "_risk_curves",ifelse(eq.geq==1,"_eq","_geq"),"_"%.%fname.suffix))    
-      
-      # text overall risks
-      if (wo.w.plac==2) {
-        text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.plac[1]+(prev.plac[1]-prev.plac[2])/2, "placebo overall "%.%formatDouble(prev.plac[1],3,remove.leading0=F))        
-        text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.vacc[1]+(prev.plac[1]-prev.plac[2])/2, "vaccine overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
-      } else {
-        if (has.plac) text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=par("usr")[4]-diff(par("usr")[3:4])/20,     "placebo overall "%.%formatDouble(prev.plac[1],3,remove.leading0=F))
-        text(x=par("usr")[2]-diff(par("usr")[1:2])/4.5, y=prev.vacc[1]+diff(par("usr")[3:4])/20, "overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
-      }
-      
-      # add histogram
-      par(new=TRUE) 
-      col <- c(col2rgb("olivedrab3")) # orange, darkgoldenrod2
-      col <- rgb(col[1], col[2], col[3], alpha=255*0.4, maxColorValue=255)
-      tmp.x=dat[[a]][dat$ph2==1]
-      tmp.w=dat$wt[dat$ph2==1]
-      tmp=get.marker.histogram(tmp.x, tmp.w, attr(config,"config"))
-      if (any(is.nan(tmp$density))) tmp=hist(tmp.x, plot=F)
-      # plot
-      plot(tmp,col=col,axes=F,labels=F,main="",xlab="",ylab="",border=0,freq=F, xlim=xlim, ylim=c(0,max(tmp$density*1.25)))
-      #axis(side=4, at=axTicks(side=4)[1:5])
-      #mtext("Density", side=4, las=0, line=2, cex=1, at=.3)  
-      #mylegend(x=6, fill=col, border=col, legend="Vaccine Group", bty="n", cex=0.7)      
-      #mtext(toTitleCase(study_name), side = 1, line = 0, outer = T, at = NA, adj = NA, padj = NA, cex = NA, col = NA, font = NA)
-      
-      dev.off()    
-    } # end assays
-    
-}
-}
-save(ylims.cor, file=paste0(save.results.to, "ylims.cor_"%.%fname.suffix%.%".Rdata"))
-
-
-# show the results at select assay values
-risks.all=get("risks.all.1") 
-for (a in markers) {
-  risks=risks.all[[a]]
-  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "50.0%", "90.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
-  tmp=10**risks$marker[table.order]
-  tmp=ifelse(tmp<100, signif(tmp,3), round(tmp))
-  out=with(risks, cbind("s"=tmp, "Estimate"=paste0(formatDouble(prob[table.order],digits.risk), " (", formatDouble(lb[table.order],digits.risk), ",", formatDouble(ub[table.order],digits.risk), ")")))
-  while (nrow(out)%%4!=0) out=rbind(out, c("s"="", "Estimate"=""))
-  tab=cbind(out[1:(nrow(out)/4), ], out[1:(nrow(out)/4)+(nrow(out)/4), ], out[1:(nrow(out)/4)+(nrow(out)/4*2), ], out[1:(nrow(out)/4)+(nrow(out)/4*3), ])
-  mytex(tab, file.name=paste0(a, "_marginalized_risks_eq", "_"%.%fname.suffix), align="c", include.colnames = T, save2input.only=T, input.foldername=save.results.to, include.rownames = F,
-        longtable=T, caption.placement = "top", label=paste0("tab marginalized_risks_eq ", fname.suffix), caption=paste0("Marginalized cumulative risk by Day ",tfinal.tpeak," as functions of Day ",
-            tpeak, " ", markers.names.short[a], " (=s) among baseline negative vaccine recipients with 95\\% bootstrap point-wise confidence intervals (",
-            ncol(risks.all[[1]]$boot)," replicates). ",
-            "Last six values correspond to 2.5\\%, 5.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
-        #, col.headers=paste0("\\hline\n", concatList(paste0("\\multicolumn{2}{c}{", labels.axis[1,], "}"), "&"), "\\\\\n")
-  )
-}
-
 
 
 ################################################################################
@@ -671,6 +540,39 @@ for (a in markers) {
 
 
 ###################################################################################################
+cat("plot trichotomized markers, log(-log) marginalized survival curves\n")
+# for goodness of fit check on PH assumptions
+
+for (a in markers) {        
+  mypdf(onefile=F, file=paste0(save.results.to, a, "_marginalized_risks_cat_logclog_",fname.suffix), mfrow=.mfrow)
+  marker.name=a%.%"cat"    
+  
+  out=risks.all.ter[[a]]
+  # cutpoints
+  q.a=marker.cutpoints[[a]]
+  
+  if(length(out)==1) empty.plot() else {
+    mymatplot(out$time[out$time<=tfinal.tpeak], log(-log(out$risk[out$time<=tfinal.tpeak,])), 
+              lty=1:3, col=c("green3","green","darkgreen"), type="l", lwd=lwd, make.legend=F, 
+              ylab=paste0("log(-log( Probability* of ",config.cor$txt.endpoint," by Day "%.%tfinal.tpeak, " ))"), xlab="", 
+              las=1, xlim=c(0,tfinal.tpeak), at=x.time, xaxt="n")
+    title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
+    title(main=markers.names.long[a], cex.main=.9, line=2)
+    title(main=for.title, line=.6, cex.main=.9)
+    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
+                                 .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 2.8, cex=.8, side=1)   
+    legend=c("Vaccine low","Vaccine medium","Vaccine high")
+    mylegend(x=3, legend=legend, lty=c(1:3), col=c("green3","green","darkgreen"), lwd=2)
+  }
+  
+  dev.off()    
+}
+
+
+if (trichotomized.only) return()
+
+
+###################################################################################################
 cat("make trichotomized markers, marginalized risk and controlled risk table\n")
 
 res=sapply (markers, function(a) {        
@@ -700,34 +602,138 @@ write(concatList(tab, "\\\\"), file=paste0(save.results.to, "marginalized_risks_
 
 
 
-###################################################################################################
-cat("plot trichotomized markers, log(-log) marginalized survival curves\n")
-# for goodness of fit check on PH assumptions
 
-for (a in markers) {        
-  mypdf(onefile=F, file=paste0(save.results.to, a, "_marginalized_risks_cat_logclog_",fname.suffix), mfrow=.mfrow)
-  marker.name=a%.%"cat"    
-  
-  out=risks.all.ter[[a]]
-  # cutpoints
-  q.a=marker.cutpoints[[a]]
-  
-  if(length(out)==1) empty.plot() else {
-    mymatplot(out$time[out$time<=tfinal.tpeak], log(-log(out$risk[out$time<=tfinal.tpeak,])), 
-              lty=1:3, col=c("green3","green","darkgreen"), type="l", lwd=lwd, make.legend=F, 
-              ylab=paste0("log(-log( Probability* of ",config.cor$txt.endpoint," by Day "%.%tfinal.tpeak, " ))"), xlab="", 
-              las=1, xlim=c(0,tfinal.tpeak), at=x.time, xaxt="n")
-    title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
-    title(main=markers.names.long[a], cex.main=.9, line=2)
-    title(main=for.title, line=.6, cex.main=.9)
-    mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
-                                 .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 2.8, cex=.8, side=1)   
-    legend=c("Vaccine low","Vaccine medium","Vaccine high")
-    mylegend(x=3, legend=legend, lty=c(1:3), col=c("green3","green","darkgreen"), lwd=2)
+###################################################################################################
+cat("plot marginalized risk curves for continuous markers\n")
+
+for (eq.geq in 1:eq.geq.ub) {  # 1 conditional on s,   2 is conditional on S>=s
+  for (wo.w.plac in 1:wo.w.plac.ub) { # 1 with placebo lines, 2 without placebo lines. Implementation-wise, the main difference is in ylim
+    # eq.geq=1; wo.w.plac=2; a=markers[1]
+    
+    risks.all=get("risks.all."%.%eq.geq)
+    
+    if (!create.ylims.cor) {
+      ylim=ylims.cor[[eq.geq]][[wo.w.plac]]
+      
+    } else {
+      if(verbose>=2) print("no ylims.cor found")        
+      if (eq.geq==2 & wo.w.plac==1) {
+        # later values in prob may be wildly large due to lack of samples
+        ylim=range(sapply(risks.all, function(x) x$prob[1]), if(wo.w.plac==2) prev.plac, prev.vacc, 0)
+        # may need to add some white space at the top to write placebo overall risk
+      } else {
+        ylim = range(lapply(markers, function(a) {
+          risks=risks.all[[a]]
+          # in some datasets, not all markers have risks
+          if (!is.null(risks)) {
+            shown=risks$marker>=wtd.quantile(dat[[a]], dat$wt, 2.5/100) & risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
+            risks$prob[shown]
+          } else {
+            NULL
+          }
+        }))
+        ylim=range(ylim, prev.vacc, 0, if(wo.w.plac==2) prev.plac)
+      }
+      ylims.cor[[eq.geq]][[wo.w.plac]]=ylim
+    }
+    # the following is commented out because it depends on COR
+    # make the ylim look comparable to ID50 in this trial
+    # if (attr(config,"config")=="azd1222_bAb" & eq.geq==1 & wo.w.plac==2 & COR=="D57") ylim=c(0,0.05)    
+    if(verbose>=2) myprint(ylim)
+    lwd=2
+    
+    for (a in markers) {        
+      mypdf(oma=c(0,0,0,0), onefile=F, file=paste0(save.results.to, a, "_marginalized_risks", ifelse(eq.geq==1,"_eq","_geq"), ifelse(wo.w.plac==2,"","_woplacebo"), "_"%.%fname.suffix), mfrow=.mfrow)
+      
+      par(las=1, cex.axis=0.9, cex.lab=1)# axis label orientation
+      risks=risks.all[[a]]
+      assay=marker.name.to.assay(a)
+      is.delta=startsWith(a,"Delta")
+      
+      ncases=sapply(risks$marker, function(s) sum(dat$yy[dat[[a]]>=s], na.rm=T))
+      
+      if (!is.delta) xlim=get.range.cor(dat, assay, tpeak) else xlim=range(dat[[a]], na.rm=T)
+      shown=risks$marker>=ifelse(study_name=="COVE",log10(10),wtd.quantile(dat[[a]], dat$wt, 2.5/100)) & 
+        risks$marker<=wtd.quantile(dat[[a]], dat$wt, 1-2.5/100)
+      plot(risks$marker[shown], risks$prob[shown], 
+           xlab=markers.names.short[a]%.%ifelse(eq.geq==1," (=s)"," (>=s)"), 
+           xlim=xlim, ylab=paste0("Probability* of ",config.cor$txt.endpoint," by ", tfinal.tpeak, " days post Day ", tpeak1, " Visit"), lwd=lwd, ylim=ylim, 
+           type="n", main=paste0(markers.names.long[a]), xaxt="n")
+      title(main=for.title, line=.6, cex.main=.9)
+      draw.x.axis.cor(xlim, llox=lloxs[assay], if(is.delta) "delta" else llox_labels[assay])
+      
+      # prevalence lines
+      if (has.plac & wo.w.plac==2) abline(h=prev.plac[1], col="gray", lty=c(2,3,3), lwd=lwd)
+      
+      # risks
+      if (eq.geq==1) {
+        abline(h=prev.vacc, col="darkgray", lty=c(1,3,3), lwd=lwd)
+        lines(risks$marker[shown], risks$prob[shown], lwd=lwd)
+        lines(risks$marker[shown], risks$lb[shown],   lwd=lwd, lty=3)
+        lines(risks$marker[shown], risks$ub[shown],   lwd=lwd, lty=3)    
+        img.dat=cbind(risks$marker[shown], risks$prob[shown], risks$lb[shown], risks$ub[shown])
+      } else {
+        abline(h=prev.vacc[1], col="gray", lty=c(1), lwd=lwd)
+        lines(risks$marker[ncases>=5], risks$prob[ncases>=5], lwd=lwd)
+        lines(risks$marker[ncases>=5], risks$lb[ncases>=5],   lwd=lwd, lty=3)
+        lines(risks$marker[ncases>=5], risks$ub[ncases>=5],   lwd=lwd, lty=3)    
+        img.dat=cbind(risks$marker[ncases>=5], risks$prob[ncases>=5], risks$lb[ncases>=5], risks$ub[ncases>=5])
+      }
+      
+      # save to satisfy some journal requirements
+      if(wo.w.plac==2) mywrite.csv(img.dat, file=paste0(save.results.to, a, "_risk_curves",ifelse(eq.geq==1,"_eq","_geq"),"_"%.%fname.suffix))    
+      
+      # text overall risks
+      if (wo.w.plac==2) {
+        text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.plac[1]+(prev.plac[1]-prev.plac[2])/2, "placebo overall "%.%formatDouble(prev.plac[1],3,remove.leading0=F))        
+        text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=prev.vacc[1]+(prev.plac[1]-prev.plac[2])/2, "vaccine overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
+      } else {
+        if (has.plac) text(x=par("usr")[2]-diff(par("usr")[1:2])/3.5, y=par("usr")[4]-diff(par("usr")[3:4])/20,     "placebo overall "%.%formatDouble(prev.plac[1],3,remove.leading0=F))
+        text(x=par("usr")[2]-diff(par("usr")[1:2])/4.5, y=prev.vacc[1]+diff(par("usr")[3:4])/20, "overall "%.%formatDouble(prev.vacc[1],3,remove.leading0=F))
+      }
+      
+      # add histogram
+      par(new=TRUE) 
+      col <- c(col2rgb("olivedrab3")) # orange, darkgoldenrod2
+      col <- rgb(col[1], col[2], col[3], alpha=255*0.4, maxColorValue=255)
+      tmp.x=dat[[a]][dat$ph2==1]
+      tmp.w=dat$wt[dat$ph2==1]
+      tmp=get.marker.histogram(tmp.x, tmp.w, attr(config,"config"))
+      if (any(is.nan(tmp$density))) tmp=hist(tmp.x, plot=F)
+      # plot
+      plot(tmp,col=col,axes=F,labels=F,main="",xlab="",ylab="",border=0,freq=F, xlim=xlim, ylim=c(0,max(tmp$density*1.25)))
+      #axis(side=4, at=axTicks(side=4)[1:5])
+      #mtext("Density", side=4, las=0, line=2, cex=1, at=.3)  
+      #mylegend(x=6, fill=col, border=col, legend="Vaccine Group", bty="n", cex=0.7)      
+      #mtext(toTitleCase(study_name), side = 1, line = 0, outer = T, at = NA, adj = NA, padj = NA, cex = NA, col = NA, font = NA)
+      
+      dev.off()    
+    } # end assays
+    
   }
-  
-  dev.off()    
 }
+save(ylims.cor, file=paste0(save.results.to, "ylims.cor_"%.%fname.suffix%.%".Rdata"))
+
+
+# show the results at select assay values
+risks.all=get("risks.all.1") 
+for (a in markers) {
+  risks=risks.all[[a]]
+  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "50.0%", "90.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
+  tmp=10**risks$marker[table.order]
+  tmp=ifelse(tmp<100, signif(tmp,3), round(tmp))
+  out=with(risks, cbind("s"=tmp, "Estimate"=paste0(formatDouble(prob[table.order],digits.risk), " (", formatDouble(lb[table.order],digits.risk), ",", formatDouble(ub[table.order],digits.risk), ")")))
+  while (nrow(out)%%4!=0) out=rbind(out, c("s"="", "Estimate"=""))
+  tab=cbind(out[1:(nrow(out)/4), ], out[1:(nrow(out)/4)+(nrow(out)/4), ], out[1:(nrow(out)/4)+(nrow(out)/4*2), ], out[1:(nrow(out)/4)+(nrow(out)/4*3), ])
+  mytex(tab, file.name=paste0(a, "_marginalized_risks_eq", "_"%.%fname.suffix), align="c", include.colnames = T, save2input.only=T, input.foldername=save.results.to, include.rownames = F,
+        longtable=T, caption.placement = "top", label=paste0("tab marginalized_risks_eq ", fname.suffix), caption=paste0("Marginalized cumulative risk by Day ",tfinal.tpeak," as functions of Day ",
+                                                                                                                         tpeak, " ", markers.names.short[a], " (=s) among baseline negative vaccine recipients with 95\\% bootstrap point-wise confidence intervals (",
+                                                                                                                         ncol(risks.all[[1]]$boot)," replicates). ",
+                                                                                                                         "Last six values correspond to 2.5\\%, 5.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
+        #, col.headers=paste0("\\hline\n", concatList(paste0("\\multicolumn{2}{c}{", labels.axis[1,], "}"), "&"), "\\\\\n")
+  )
+}
+
 
 
 
