@@ -47,7 +47,7 @@ has.plac=!is.null(dat.plac)
 eq.geq.ub=ifelse(plot.geq, 2, 1)
 wo.w.plac.ub=ifelse(plot.w.plac, 2, 1)
 
-myprint(has.plac, plot.geq, plot.w.plac, for.title)
+myprint(comp.risk, has.plac, plot.geq, plot.w.plac, for.title)
   
 # make form.s from form.0
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
@@ -204,7 +204,13 @@ for (a in markers) {
       if (class(fit)[1]=="try-error") NA else fit
     }
     
-    fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
+    if (all(dat$wt==1)) {
+      # all ph1 are ph2; syvcoxph throws an error, thus use coxph
+      fit.risk=coxph(f1, dat)
+      
+    } else {
+      fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
+    }
     
     #    f2=update(form.0, as.formula(paste0(marker.name,"~.")))
     #    fit.s=nnet::multinom(f2, dat, weights=dat$wt) 
