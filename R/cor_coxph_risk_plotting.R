@@ -271,6 +271,13 @@ ylim=c(0,
            if(has.plac) risk.0)
        )
 
+# hard coding to get the same ylim for bAb and nAb
+if (COR=="D57azd1222_stage2_delta_nAb" | COR=="D57azd1222_stage2_delta_bAb") {
+  ylim=c(0,.008)
+} else if (COR=="D57azd1222_stage2_severe_nAb" | COR=="D57azd1222_stage2_severe_bAb") {
+  ylim=c(0,.08)
+}
+
 
 if (config$is_ows_trial) {
   x.time<-seq(0,tfinal.tpeak,by=30)
