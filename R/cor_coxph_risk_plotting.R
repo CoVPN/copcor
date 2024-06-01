@@ -273,9 +273,9 @@ ylim=c(0,
 
 # hard coding to get the same ylim for bAb and nAb
 if (COR=="D57azd1222_stage2_delta_nAb" | COR=="D57azd1222_stage2_delta_bAb") {
-  ylim=c(0,.08)
+  ylim=c(0,.09)
 } else if (COR=="D57azd1222_stage2_severe_nAb" | COR=="D57azd1222_stage2_severe_bAb") {
-  ylim=c(0,.008)
+  ylim=c(0,.009)
 }
 
 
