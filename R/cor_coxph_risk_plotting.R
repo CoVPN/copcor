@@ -732,7 +732,7 @@ save(ylims.cor, file=paste0(save.results.to, "ylims.cor_"%.%fname.suffix%.%".Rda
 risks.all=get("risks.all.1") 
 for (a in markers) {
   risks=risks.all[[a]]
-  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "50.0%", "90.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
+  table.order=which(names(risks$marker) %in% c(" 2.5%", " 5.0%", "10.0%", "50.0%", "90.0%", "95.0%", "97.5%")); table.order=c(setdiff(1:length(risks$marker), table.order), table.order)
   tmp=10**risks$marker[table.order]
   tmp=ifelse(tmp<100, signif(tmp,3), round(tmp))
   out=with(risks, cbind("s"=tmp, "Estimate"=paste0(formatDouble(prob[table.order],digits.risk), " (", formatDouble(lb[table.order],digits.risk), ",", formatDouble(ub[table.order],digits.risk), ")")))
