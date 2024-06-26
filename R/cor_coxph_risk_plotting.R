@@ -742,7 +742,7 @@ for (a in markers) {
         longtable=T, caption.placement = "top", label=paste0("tab marginalized_risks_eq ", fname.suffix), caption=paste0("Marginalized cumulative risk by Day ",tfinal.tpeak," as functions of Day ",
                                                                                                                          tpeak, " ", markers.names.short[a], " (=s) among baseline negative vaccine recipients with 95\\% bootstrap point-wise confidence intervals (",
                                                                                                                          ncol(risks.all[[1]]$boot)," replicates). ",
-                                                                                                                         "Last six values correspond to 2.5\\%, 5.0\\%, 10.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
+                                                                                                                         "Last seven values correspond to 2.5\\%, 5.0\\%, 10.0\\%, 50.0\\%, 90.0\\%, 95.0\\%, 97.5\\%, respectively.")
         #, col.headers=paste0("\\hline\n", concatList(paste0("\\multicolumn{2}{c}{", labels.axis[1,], "}"), "&"), "\\\\\n")
   )
 }

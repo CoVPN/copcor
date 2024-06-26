@@ -17,7 +17,7 @@ cor_coxph_risk_bootstrap = function(
   verbose=FALSE
 ) {
   
-print("cor_coxph_risk_bootstrap")
+cat("Inside function cor_coxph_risk_bootstrap ...............\n")
   
 comp.risk=is.list(form.0) # competing risk
   

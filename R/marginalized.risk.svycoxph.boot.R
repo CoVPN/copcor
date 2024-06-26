@@ -69,6 +69,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
       # non-competing risk implementation
       result <- tryCatch({
         fit.risk.1=svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=data))
+        print(fit.risk.1)
         out=marginalized.risk(fit.risk.1, marker.name, data.ph2, t=t, ss=ss, weights=data.ph2$wt, categorical.s=categorical.s)
         if (n.dean) {
           c(n.dean= last(coef(fit.risk.1)/sqrt(diag(fit.risk.1$var))) * sqrt(1/fit.risk.1$n + 1/fit.risk.1$nevent), out) 
@@ -222,7 +223,8 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   seeds=1:B; names(seeds)=seeds
 
-  out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {   
+  out=lapply(seeds, function(seed) {   
+  # out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {   
     seed=seed+560
     if (verbose>=2) myprint(seed)
     
@@ -317,6 +319,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   })
   
   res=do.call(cbind, out)
+  # print(res)
   if (type==1) {
     # the first row is n.dean
     boot.n.dean=res[1,]
@@ -324,6 +327,9 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   }
   res=res[,!is.na(res[1,])] # remove NA's
   if (verbose) str(res)
+  if (is.array(res)) {
+    stop("res is only 1-dimension, which means all bootstrap replicates return NA")
+  }
   
   # restore rng state 
   assign(".Random.seed", save.seed, .GlobalEnv)    
