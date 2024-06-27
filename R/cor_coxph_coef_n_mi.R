@@ -62,6 +62,8 @@ cor_coxph_coef_n_mi = function(
     rows=(rows-(nCoef-1)):rows
     res=sapply(fits, simplify="array", function (fit) as.matrix(subset(fit, select=-missInfo))[rows,,drop=F])
     
+    # est=signif(exp(res[,1,]), 2)
+    # ci= matrix(paste0("(", signif(exp(res[,'(lower',]), 2), "-", signif(exp(res[,'upper)',]), 2), ")"), nrow=length(rows))
     est=formatDouble(exp(res[,1,]), 2, remove.leading0=F)
     ci= matrix(paste0("(", formatDouble(exp(res[,'(lower',]), 2, remove.leading0=F), "-", formatDouble(exp(res[,'upper)',]), 2, remove.leading0=F), ")"), nrow=length(rows))
     p=  formatDouble(2*pnorm(abs(res[,1,])/res[,"se",], lower.tail=F), 3, remove.leading0=F)
