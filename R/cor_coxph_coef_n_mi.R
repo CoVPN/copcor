@@ -60,7 +60,7 @@ cor_coxph_coef_n_mi = function(
     # remove missInfo and cast as matrix to get a numeric matrix
     rows=nrow(fits[[1]])
     rows=(rows-(nCoef-1)):rows
-    res=sapply(fits, simplify="array", function (fit) as.matrix(subset(fit, select=-missInfo))[rows,,drop=F])
+    res=sapply(fits, simplify="array", function (fit) as.matrix(fit[,!names(fit) %in% c("missInfo")])[rows,,drop=F])
     
     est=formatDouble(exp(res[,1,]), 2, remove.leading0=F)
     ci= matrix(paste0("(", formatDouble(exp(res[,'(lower',]), 2, remove.leading0=F), "-", formatDouble(exp(res[,'upper)',]), 2, remove.leading0=F), ")"), nrow=length(rows))

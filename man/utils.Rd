@@ -12,8 +12,12 @@ Helpful functions.
 \usage{
 
 marker.name.to.assay (a)
+
 get.marginalized.risk.no.marker(formula, dat.ph1, followup.day)
-add.trichotomized.markers(dat, markers, ph2.col.name="ph2", wt.col.name="wt") 
+
+add.trichotomized.markers (dat, markers, ph2.col.name = "ph2", wt.col.name =
+                 "wt", verbose = F)
+
 make.case.count.marker.availability.table(dat)
 
 }

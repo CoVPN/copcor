@@ -88,16 +88,16 @@ cor_coxph_coef_1_mi = function(
         fits[[a]]=res
         
         # save for forest plots
-        if (TRIAL=='janssen_partA_VL') {
-          cox.df=rbind(cox.df, list(
-            region = region, 
-            variant = variant, 
-            assay = a, 
-            est = exp(res[nrow(res),"results"]),
-            lb =exp(res[nrow(res),"(lower"]),
-            ub = exp(res[nrow(res),"upper)"])
-          ))
-        }
+        # if (TRIAL=='janssen_partA_VL') {
+        #   cox.df=rbind(cox.df, list(
+        #     region = region, 
+        #     variant = variant, 
+        #     assay = a, 
+        #     est = exp(res[nrow(res),"results"]),
+        #     lb =exp(res[nrow(res),"(lower"]),
+        #     ub = exp(res[nrow(res),"upper)"])
+        #   ))
+        # }
   
       } else {
         fits.scaled[[a]]=res
@@ -120,13 +120,13 @@ cor_coxph_coef_1_mi = function(
   
   for (i in 1:2) { # 1: not scaled, 2: scaled
     # remove missInfo and cast as matrix to get a numeric matrix
-    res=as.matrix(mysapply(if(i==1) fits else fits.scaled, function (fit) as.matrix(subset(fit, select=-missInfo))[nrow(fit),]))
+    res=as.matrix(mysapply(if(i==1) fits else fits.scaled, function (fit) as.matrix(fit[,names(fit)!="missInfo"])[nrow(fit),]))
     # exp HR
     tab.1=cbind(
       # est
       formatDouble(exp(res[,1]), 2, remove.leading0=F),
       # CI
-      glue("({formatDouble(exp(res[,'(lower']), 2, remove.leading0=F)}-{formatDouble(exp(res[,'upper)']), 2, remove.leading0=F)})"),
+      paste0("(", formatDouble(exp(res[,'(lower']), 2, remove.leading0=F), "-", formatDouble(exp(res[,'upper)']), 2, remove.leading0=F), ")"),
       # compute p value based on Gaussian
       formatDouble(2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F), 3, remove.leading0=F)
     )
@@ -142,7 +142,7 @@ cor_coxph_coef_1_mi = function(
           longtable=T, 
           label=paste0("tab:CoR_univariable_svycoxph_pretty",ifelse(i==1,"","_scaled")), 
           caption.placement = "top", 
-          caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", 
+          caption=paste0("Inference for Day ", config.cor$tpeak, " antibody marker covariate-adjusted correlates of risk of ", 
                          config.cor$txt.endpoint, 
                          " in the vaccine group: Hazard ratios per ",ifelse(i==1,"10-fold","SD")," increment in the marker*")
     )
@@ -217,21 +217,21 @@ cor_coxph_coef_1_mi = function(
   get.est=function(a) {
     fit=fits.tri[[a]]
     if (length(fit)==1) return (rep(NA,2))
-    res=subset(fit, select=-missInfo)[nrow(fit)-(marker.levels[a]-2):0,1]
+    res=fit[,names(fit)!="missInfo"][nrow(fit)-(marker.levels[a]-2):0,1]
     out=formatDouble(exp(res), 2, remove.leading0=F)
     if (length(out)==1) c(NA,out) else out
   }
   get.ci =function(a) {
     fit=fits.tri[[a]]
     if (length(fit)==1) return (rep(NA,2))
-    res=subset(fit, select=-missInfo)[nrow(fit)-(marker.levels[a]-2):0,,drop=F] 
-    out=glue("({formatDouble(exp(res[,'(lower']), 2, remove.leading0=F)}-{formatDouble(exp(res[,'upper)']), 2, remove.leading0=F)})")
+    res=fit[,names(fit)!="missInfo"][nrow(fit)-(marker.levels[a]-2):0,,drop=F] 
+    out=paste0("(", formatDouble(exp(res[,'(lower']), 2, remove.leading0=F), "-", formatDouble(exp(res[,'upper)']), 2, remove.leading0=F), ")")
     if (length(out)==1) c(NA,out) else out
   }
   get.p  =function(a) {
     fit=fits.tri[[a]]
     if (length(fit)==1) return (rep(NA,2))
-    res=subset(fit, select=-missInfo)[nrow(fit)-(marker.levels[a]-2):0,,drop=F] 
+    res=fit[,names(fit)!="missInfo"][nrow(fit)-(marker.levels[a]-2):0,,drop=F] 
     out=formatDouble(2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F), 3, remove.leading0=F)
     if (length(out)==1) c(NA,out) else out
   }
@@ -258,9 +258,9 @@ cor_coxph_coef_1_mi = function(
            \\hline\n 
       "),       
         longtable=T, 
-        label=paste0("tab:CoR_univariable_svycoxph_cat_pretty_", study_name), 
+        label=paste0("tab:CoR_univariable_svycoxph_cat_pretty_", config$study_name), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", 
+        caption=paste0("Inference for Day ", config.cor$tpeak, " antibody marker covariate-adjusted correlates of risk of ", 
                        config.cor$txt.endpoint, 
                        " in the vaccine group: Hazard ratios for Middle vs. Upper tertile vs. Lower tertile*")
   )
@@ -271,9 +271,9 @@ cor_coxph_coef_1_mi = function(
   ###################################################################################################
   # multivariate_assays models
   
-  if (!is.null(multivariate_assays)) {
+  if (!is.null(config$multivariate_assays)) {
   
-  for (a in multivariate_assays) {
+  for (a in config$multivariate_assays) {
     aa=trim(strsplit(a, "\\+")[[1]])
     
     for (i in 1:2) { # 1: per SD; 2: per 10-fold
@@ -290,7 +290,7 @@ cor_coxph_coef_1_mi = function(
           # a="bindSpike+bindSpike_B.1.351" works, but a="bindSpike_B.1.351+bindSpike" does not
           # since bindSpike_B.1.351 contains bindSpike
           
-          a.tmp=sub(x, paste0(if(i==1) "scale",  "(", DayPrefix, tpeak, x, if(TRIAL=="janssen_partA_VL") "_"%.%imp, ")"), a.tmp) 
+          a.tmp=sub(x, paste0(if(i==1) "scale",  "(", DayPrefix, config.cor$tpeak, x, if(TRIAL=="janssen_partA_VL") "_"%.%imp, ")"), a.tmp) 
         }
         
         f = update(form.0, as.formula(paste0("~.+", a.tmp)))
@@ -314,7 +314,7 @@ cor_coxph_coef_1_mi = function(
       res<-summary(combined.model) # MIcombine prints the results, there is no way to silent it
       
       est=formatDouble(exp(res[,1]), 2, remove.leading0=F)
-      ci= glue("({formatDouble(exp(res[,'(lower']), 2, remove.leading0=F)}-{formatDouble(exp(res[,'upper)']), 2, remove.leading0=F)})")
+      ci= paste0("(", formatDouble(exp(res[,'(lower']), 2, remove.leading0=F), "-", formatDouble(exp(res[,'upper)']), 2, remove.leading0=F), ")")
       est = paste0(est, " ", ci)
       p=  formatDouble(2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F), 3, remove.leading0=F)
       
@@ -324,15 +324,16 @@ cor_coxph_coef_1_mi = function(
       p.gwald=pchisq(stat, length(rows), lower.tail = FALSE)
       
       tab=cbind(est, p)[rows,,drop=F]
-      tmp=match(aa, colnames(labels.axis))
-      tmp[is.na(tmp)]=1 # otherwise, labels.axis["Day"%.%tpeak, tmp] would throw an error when tmp is NA
-      rownames(tab)=ifelse(aa %in% colnames(labels.axis), labels.axis["Day"%.%tpeak, tmp], aa)
+      ## set row names
+      # tmp=match(aa, colnames(labels.axis))
+      # tmp[is.na(tmp)]=1 # otherwise, labels.axis["Day"%.%tpeak, tmp] would throw an error when tmp is NA
+      # rownames(tab)=ifelse(aa %in% colnames(labels.axis), labels.axis["Day"%.%config.cor$tpeak, tmp], aa)
       colnames(tab)=c(paste0("HR per ",ifelse(i==1,"sd","10 fold")," incr."), "P value")
       tab
       tab=rbind(tab, "Generalized Wald Test"=c("", formatDouble(p.gwald,3, remove.leading0 = F)))
   
       mytex(tab, file.name=paste0("CoR_multivariable_svycoxph_pretty", 
-                                  match(a, multivariate_assays), 
+                                  match(a, config$multivariate_assays), 
                                   if(i==2) "_per10fold",
                                   fname.suffix), 
             align="c", include.colnames = T, save2input.only=T, input.foldername=save.results.to)
@@ -342,7 +343,7 @@ cor_coxph_coef_1_mi = function(
   }
   
   
-  write(NA, file=paste0(save.results.to, "permutation_replicates_"%.%study_name))     # so the rmd file can compile
+  write(NA, file=paste0(save.results.to, "permutation_replicates_"%.%config$study_name))     # so the rmd file can compile
 
   
 }

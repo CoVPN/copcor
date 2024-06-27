@@ -4,8 +4,8 @@
 \description{Functions for plotting.}
 \usage{
 
-marginalized.risk.svycoxph.boot(form.0, marker.name, type, data, t, B, 
-  ci.type="quantile", numCores=1, additional.terms=NULL, variant=NULL)
+marginalized.risk.svycoxph.boot(form.0, marker.name, type, data, t, B, ci.type =
+                 "quantile", numCores = 1)
 
 }
 \arguments{

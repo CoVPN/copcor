@@ -155,7 +155,7 @@ cor_coxph_coef_1 = function(
       out=mclapply(1:numPerm, mc.cores = numCores, FUN=function(seed) {   
         # store the current rng state 
         save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
-        if (class(save.seed)=="try-error") {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }          
+        if (inherits(save.seed,"try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }          
         set.seed(seed)        
         
         # permute markers in design_or_dat.perm
@@ -174,7 +174,7 @@ cor_coxph_coef_1 = function(
             f= update(form.0, as.formula(paste0("~.+", a)))
             if (tps) {
               fit=try(svycoxph(f, design=design_or_dat.perm), silent=T)
-              if (class(fit)[1]=="try-error") fit=NA
+              if (inherits(fit,"try-error")) fit=NA
               
             } else {
               # TODO
@@ -186,7 +186,7 @@ cor_coxph_coef_1 = function(
             f= update(form.0, as.formula(paste0("~.+", a, "cat")))
             if (tps) {
               fit=try(svycoxph(f, design=design_or_dat.perm), silent=T)
-              if (class(fit)[1]=="try-error") fit=NA
+              if (inherits(fit,"try-error")) fit=NA
               
             } else {
               # TODO

@@ -1,4 +1,4 @@
-utils::globalVariables(c("TRIAL", "config", "assay_metadata", "verbose", "DayPrefix"))
+utils::globalVariables(c("TRIAL", "config", "assay_metadata", "verbose", "DayPrefix", "COR", "variant"))
 
 
 # _ causes trouble in captions, and that has to be taken care of by putting \protect{} around the word
@@ -58,7 +58,7 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
     # model=T is required because the type of prediction requires it, see Note on ?predict.coxph
     fit.risk = coxph(formula, dat.ph1, model=T) 
     # dat.ph1$EventTimePrimary=followup.day # it cannot be like this
-    dat.ph1[[as.character(form.0[[2]][[2]])]] = followup.day
+    dat.ph1[[as.character(formula[[2]][[2]])]] = followup.day
     risks = 1 - exp(-predict(fit.risk, newdata=dat.ph1, type="expected"))
     mean(risks)
   } else {

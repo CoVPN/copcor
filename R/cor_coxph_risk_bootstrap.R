@@ -156,7 +156,7 @@ if (!is.null(config$interaction)) {
         #### bootstrap
         # store the current rng state
         save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
-        if (class(save.seed)=="try-error") {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }         
+        if (inherits(save.seed,"try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }         
         
         seeds=1:B; names(seeds)=seeds
         out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {   
@@ -175,7 +175,7 @@ if (!is.null(config$interaction)) {
           # inline design object b/c it may also throw an error
           fit.b=try(svycoxph(f, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat.b)))
           
-          if (class (fit.b)[1] != "try-error") {
+          if (inherits(fit.b,"try-error")) {
             probs=sapply (three.val, function(val) {
               marginalized.risk.cont.2(fit.b, marker.name  =vx, data=dat.b.ph2, weights=dat.b.ph2$wt, t=tfinal.tpeak, ss=ss, 
                                        marker.name.2=vthree, s.2=val)
