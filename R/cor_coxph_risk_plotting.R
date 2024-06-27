@@ -201,7 +201,7 @@ for (a in markers) {
     
     run.svycoxph = function(f, design) {
       fit=try(svycoxph(f, design=design), silent=T)
-      if (class(fit)[1]=="try-error") NA else fit
+      if (inherits(fit,"try-error")) NA else fit
     }
     
     if (all(dat$wt==1)) {

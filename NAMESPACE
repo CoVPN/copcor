@@ -17,7 +17,7 @@ export(cor_coxph_risk_plotting, cor_coxph_risk_bootstrap, cor_coxph_coef_n, cor_
 
 importFrom(kyotil, '%.%', contain, myprint, last, trim, mypdf,
   cbinduneven, concatList , empty.plot , formatDouble , mylegend,
-  mylines , mymatplot , mytex , mywrite.csv, getFixedEf, getFormattedSummary, p.adj.perm )
+  mylines , mymatplot , mytex , mywrite.csv, getFixedEf, getFormattedSummary, p.adj.perm, pretty.print, mysapply )
 importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold, 
   marginalized.risk.cont.2, controlled.risk.bias.factor, E.value)
 importFrom(survey, svycoxph, twophase)
@@ -27,6 +27,7 @@ importFrom(survival, coxph, survfit)
 importFrom(here, here)
 importFrom(plotrix, weighted.hist)
 importFrom(future, availableCores)
+importFrom(mitools, MIcombine, MIextract)
 
 import(stats)
 import(utils)

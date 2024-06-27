@@ -12,7 +12,7 @@ Functions for plotting.
 
 draw.x.axis.cor(xlim, llox, llox.label, for.ggplot=FALSE)
 get.xlim(dat, marker) 
-report.assay.values(x, assay)
+report.assay.values(x, assay, grid_size = 10)
 get.marker.histogram(marker, wt, trial, marker.break=marker) 
 
 }

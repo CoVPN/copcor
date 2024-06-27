@@ -61,7 +61,7 @@ cor_coxph_risk_no_marker = function(
             # bootstrapping
             # store the current rng state 
             save.seed <- try(get(".Random.seed", .GlobalEnv), silent=TRUE) 
-            if (class(save.seed)=="try-error") {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }   
+            if (inherits(save.seed,"try-error")) {set.seed(1); save.seed <- get(".Random.seed", .GlobalEnv) }   
             
             if(config$sampling_scheme == 'case_cohort') ptids.by.stratum=get.ptids.by.stratum.for.bootstrap (dat.tmp) 
         
@@ -80,7 +80,7 @@ cor_coxph_risk_no_marker = function(
                 
                 prob = if (TRIAL %in% c("janssen_partA_VL")) {
                     # if there is no missing variant info in a bootstrap dataset, only need to run the MI code once
-                    nImp=ifelse(any(with(subset(dat.b, EventIndPrimary==1), is.na(seq1.variant))), 10, 1)
+                    nImp=ifelse(any(with(dat.b[dat.b$EventIndPrimary==1,], is.na(seq1.variant))), 10, 1)
                     mean(sapply(1:nImp, function(imp) {
                         dat.b$EventIndOfInterest = ifelse(dat.b$EventIndPrimary==1 & dat.b[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
                         dat.b$EventIndCompeting  = ifelse(dat.b$EventIndPrimary==1 & dat.b[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)

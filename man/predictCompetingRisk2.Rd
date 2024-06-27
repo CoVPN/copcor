@@ -138,7 +138,7 @@ library(riskRegression)
 fit2 <- CSC(list(Hist(time,status)~sex, Hist(time,status)~age), data=lung1, surv.type="hazard",
 cause=1)
 r2=c(predictRisk(fit2,cause=1,product.limit=FALSE,newdata=lung1,times=t0))
-head(cbind(cif, r2))
+#head(cbind(cif, r2))
 
 # pcr can produce cif that is greater than 1, especially when the covariates for the overall 
 # failure model differs from the covariates for the cause-specific model
@@ -147,7 +147,7 @@ cif.1=pcr(Surv(time, status.1) ~ sex, Surv(time, status.a) ~ age, lung1, t0)
 #
 fit3 <- CSC(list(Hist(time,status)~sex, Hist(time,status)~age), data=lung1, surv.type="surv",
  cause=1)
-r3=c(predictRisk(fit3,cause=1,product.limit=F,newdata=lung1,times=t0))
+r3=c(predictRisk(fit3,cause=1,product.limit=FALSE,newdata=lung1,times=t0))
 }
 
 # dealing with weights
