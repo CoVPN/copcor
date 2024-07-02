@@ -14,6 +14,15 @@ export(hotdeckMI, escape)
 
 export(cor_coxph_risk_plotting, cor_coxph_risk_bootstrap, cor_coxph_coef_n, cor_coxph_coef_1, cor_coxph_coef_itxn3)
 
+export(
+  PPD2DKE_pseudoneutid50_D614G,
+  DKE2IU_pseudoneutid50_D614G, 
+  MNG2IU_pseudoneutid50_D614G, 
+  PPD2DKE_pseudoneutid50_BA1, 
+  DKE2imputedIU_pseudoneutid50_BA1, 
+  MNG2imputedIU_pseudoneutid50_BA1
+)
+
 
 importFrom(kyotil, '%.%', contain, myprint, last, trim, mypdf,
   cbinduneven, concatList , empty.plot , formatDouble , mylegend,

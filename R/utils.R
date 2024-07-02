@@ -1,6 +1,18 @@
 utils::globalVariables(c("TRIAL", "config", "assay_metadata", "verbose", "DayPrefix", "COR", "variant"))
 
 
+# convert ID50 between assays
+
+PPD2DKE_pseudoneutid50_D614G = function(log_titers) (log_titers + 0.371)/1.073
+DKE2IU_pseudoneutid50_D614G  = function(log_titers)  log_titers - 0.616185 #log10(0.242)
+MNG2IU_pseudoneutid50_D614G  = function(log_titers)  log_titers - 1.185087 #log10(0.0653)
+
+PPD2DKE_pseudoneutid50_BA1   = function(log_titers) (log_titers + 0.303)/1.25
+DKE2imputedIU_pseudoneutid50_BA1  = function(log_titers)  log_titers - 0.616185 #log10(0.242)
+MNG2imputedIU_pseudoneutid50_BA1  = function(log_titers)  log_titers - 1.185087 #log10(0.0653)
+
+
+
 # _ causes trouble in captions, and that has to be taken care of by putting \protect{} around the word
 escape=function(x) {
   for (i in c("_","^")) {
