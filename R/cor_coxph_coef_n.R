@@ -38,7 +38,11 @@ cor_coxph_coef_n = function(
     if (tps) {
       fits[[a]]=svycoxph(f, design=design_or_dat) 
     } else {
-      fits[[a]]=coxph(f, design_or_dat) 
+      fits[[a]]=try(coxph(f, design_or_dat) )
+      if (inherits(fits[[a]], "try-error")) {
+        fits[[a]]=NULL
+        all.markers.names.short = all.markers.names.short[names(all.markers.names.short)!=a]
+      }
     }
   }
   
