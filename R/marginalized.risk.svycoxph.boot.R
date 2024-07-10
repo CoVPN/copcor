@@ -328,7 +328,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   res=res[,!is.na(res[1,])] # remove NA's
   if (verbose) str(res)
   if (is.array(res)) {
-    stop("res is only 1-dimension, which means all bootstrap replicates return NA")
+    if (length(dim(res))==1) stop("res is only 1-dimension, which means all bootstrap replicates return NA")
   }
   
   # restore rng state 
