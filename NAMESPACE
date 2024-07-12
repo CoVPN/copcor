@@ -2,7 +2,7 @@ export(draw.x.axis.cor, report.assay.values, get.xlim, get.marker.histogram, get
 
 export(marker.name.to.assay, make.case.count.marker.availability.table, get.marginalized.risk.no.marker)
 
-export(cove.boost.collapse.strata, add.trichotomized.markers)
+export(cove.boost.collapse.strata, add.trichotomized.markers, add.dichotomized.markers)
 
 export(bootstrap.case.control.samples, get.bootstrap.data.cor, bootstrap.cove.boost.2, bootstrap.cove.boost, bootstrap.cohort, get.ptids.by.stratum.for.bootstrap, cor_coxph_risk_no_marker, cor_coxph_coef_1_mi, cor_coxph_coef_n_mi)
 

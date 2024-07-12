@@ -200,7 +200,7 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
     stopifnot(binary.cut | length(table(tmp)) == 3)
     
     if(verbose) {
-      print(table(dat[[a %.% "cat"]]))
+      print(table(dat[dat[[ph2.col.name]]==1, a %.% "cat"]))
       cat("\n")
     }
     
@@ -210,6 +210,118 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
   dat
   
 }
+
+
+
+add.dichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt", verbose=F) {
+  
+  if(is.null(dat[[wt.col.name]])) stop("col does not exist: "%.%wt.col.name) 
+  if(is.null(dat[[ph2.col.name]])) stop("col does not exist: "%.%ph2.col.name) 
+  
+  # this allows adding to dich.marker.cutpoints
+  if (is.null(attr(dat, "dich.marker.cutpoints"))) {
+    dich.marker.cutpoints <- list()    
+  } else {
+    dich.marker.cutpoints <- attr(dat, "dich.marker.cutpoints")    
+  }
+  
+  for (a in markers) {
+    
+    if (verbose) myprint(a, newline=T)
+    
+    if (is.null(dat[[a %.% "dich"]])) {
+      new.col = T
+      # if a new column, will return a column of factor
+      
+    } else {
+      new.col = F
+      # if not a new column, will return a column of type character
+      dat[[a %.% "dich"]] = as.character(dat[[a %.% "dich"]])
+    }
+    
+    tmp.a=dat[[a]]
+    
+    flag=as.logical(dat[[ph2.col.name]])
+
+    # set it to NA so that it won't interfere with table
+    tmp.a[!flag]=NA
+    
+    if(startsWith(a, "Delta")) {
+      # fold change
+      q.a <- wtd.quantile(tmp.a[flag], weights = dat[[wt.col.name]][flag], probs = c(1/2))
+      
+    } else {
+      # not fold change
+      uloq=assay_metadata$uloq[assay_metadata$assay==marker.name.to.assay(a)]
+      uppercut=log10(uloq); uppercut=uppercut*ifelse(uppercut>0,.9999,1.0001)
+      
+      lowercut=min(tmp.a, na.rm=T)*1.0001; 
+      lowercut=lowercut*ifelse(lowercut>0,1.0001,.9999)
+      pos.rate=mean(tmp.a[flag]>=lowercut, na.rm=T)
+      myprint(pos.rate)
+      
+      if (mean(tmp.a[flag]>uppercut, na.rm=T)>0.4) {
+        if (verbose) cat("more than 40% of vaccine recipients have value > ULOQ, cut at ULOQ\n")
+        q.a=uppercut
+        
+      } else if (1-pos.rate>0.4) {
+        if (verbose) cat("pos.rate less than 0.6, cut at pos threshold\n")
+        q.a=c(lowercut)
+        
+      } else {
+        q.a <- wtd.quantile(tmp.a[flag], weights = dat[[wt.col.name]][flag], probs = c(1/2))
+        
+      }
+      
+    }
+    
+    tmp=try(factor(cut(tmp.a, breaks = c(-Inf, q.a, Inf))), silent=T)
+    if (inherits(tmp, "try-error")) {
+      # if there is a huge point mass, an error would occur
+      failed = TRUE
+    } else if(length(table(tmp)) != 2) {
+      # or it may not break into 3 groups
+      failed = TRUE
+    } else {
+      failed = FALSE
+    }
+    
+    if(failed) {
+      cat("\nfirst cut fails, call cut again with breaks=2 \n")
+      # cut is more robust but it does not incorporate weights
+      tmp=cut(tmp.a, breaks=2)
+      stopifnot(length(table(tmp))==2)
+    }
+    
+    if(new.col) {
+      dat[[a %.% "dich"]] = tmp
+      
+      # extract cut points from factor level labels
+      # dich.marker.cutpoints[[a]] <- q.a
+      print(names(table(tmp))[2])
+      tmpname = names(table(tmp))[2]
+      tmpname = substr(tmpname, 2, nchar(tmpname)-1)
+      dich.marker.cutpoints[[a]] <- as.numeric(strsplit(tmpname, ",")[[1]][1])
+      print(dich.marker.cutpoints[[a]])
+      
+    } else {
+      # only update values in ph2
+      dat[[a %.% "dich"]][flag] = as.character(tmp[flag])
+      
+    }
+    
+    if(verbose) {
+      print(table(dat[dat[[ph2.col.name]]==1, a %.% "dich"]))
+      cat("\n")
+    }
+    
+  }
+  
+  attr(dat, "dich.marker.cutpoints")=dich.marker.cutpoints
+  dat
+  
+}
+
 
 
 
