@@ -1,11 +1,10 @@
-# can be updated to deal with two phase
-
-# for datasets where markers are measured for everyone in the cohort
-
 # for interaction between a continuous marker and a trichotomized marker
+
 # make two tables: 
 # one showing the interaction terms and a generalized wald test p value
 # two showing the effects of the continuous marker in each level of the trichotomized marker
+
+# can be updated to deal with two phase
 
 
 cor_coxph_coef_itxn3 = function(

@@ -694,7 +694,7 @@ for (eq.geq in 1:eq.geq.ub) {  # 1 conditional on s,   2 is conditional on S>=s
       }
       
       # save to satisfy some journal requirements
-      if(wo.w.plac==2) mywrite.csv(img.dat, file=paste0(save.results.to, a, "_risk_curves",ifelse(eq.geq==1,"_eq","_geq"),"_"%.%fname.suffix))    
+      mywrite.csv(img.dat, file=paste0(save.results.to, a, "_risk_curves",ifelse(eq.geq==1,"_eq","_geq"),"_"%.%fname.suffix))    
       
       # text overall risks
       if (wo.w.plac==2) {
