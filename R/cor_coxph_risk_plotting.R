@@ -34,7 +34,9 @@ cor_coxph_risk_plotting = function(
   
   trichotomized.only=FALSE
 ) {
+  
 
+  
 if(verbose) print("Running cor_coxph_risk_plotting")
   
 comp.risk = is.list(form.0)
@@ -60,6 +62,14 @@ prev.vacc = if (TRIAL %in% c("janssen_partA_VL")) {
     dat$EventIndCompeting  = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
     get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
   }))
+  
+} else  if (TRIAL == c("vat08_combined")) {
+  mean(sapply(1:10, function(imp) {
+    dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
+    dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
+    get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
+  }))
+  
 } else {
   get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
 }
@@ -136,17 +146,19 @@ data.ph2 <- dat[dat$ph2==1,]
 
 risks.all.ter=list()
 for (a in markers) {        
+  
   marker.name=a%.%"cat"    
-
+  ss=unique(dat[[marker.name]]); ss=sort(ss[!is.na(ss)])
+  if(length(ss)==3) {
+    names(ss)=c("low","med","high")
+  } else {
+    names(ss)=c("low","high")
+  }
+  
   if (comp.risk) {
+    
     f1=lapply(form.0, function(x) update(x, as.formula(paste0("~.+",marker.name))))
-    ss=unique(dat[[marker.name]]); ss=sort(ss[!is.na(ss)])
-    if(length(ss)==3) {
-      names(ss)=c("low","med","high")
-    } else {
-      names(ss)=c("low","high")
-    }
-
+    
     if (TRIAL=="janssen_partA_VL") { 
       
       # ancestral markers have different weights and ph2 indicators
@@ -195,6 +207,7 @@ for (a in markers) {
 
     }
     
+
   } else {
     
     f1=update(form.0, as.formula(paste0("~.+",marker.name)))        
@@ -204,23 +217,42 @@ for (a in markers) {
       if (inherits(fit,"try-error")) NA else fit
     }
     
-    if (all(dat$wt==1)) {
-      # all ph1 are ph2; syvcoxph throws an error, thus use coxph
-      fit.risk=coxph(f1, dat)
+    if (TRIAL == c("vat08_combined")) {
+      
+      # multiple imputation
+      out=lapply(1:10, function(imp) {
+        dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
+        dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
+        fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
+        marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"], categorical.s=T, t.end=tfinal.tpeak)
+      
+      })
+      
+      all.t=lapply(out, function(x) x$time)
+      common.t = Reduce(intersect, all.t)
+      risks = sapply(out, simplify="array", function(x) x$risk[x$time %in% common.t,])
+      risks.all.ter[[a]]=list(time=common.t, risk=apply(risks, 1:2, mean, na.rm=T))
       
     } else {
-      fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
+      
+      if (all(dat$wt==1)) {
+        fit.risk=coxph(f1, dat)         # all ph1 are ph2; syvcoxph throws an error, thus use coxph
+      } else {
+        fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
+      }
+      
+      #    f2=update(form.0, as.formula(paste0(marker.name,"~.")))
+      #    fit.s=nnet::multinom(f2, dat, weights=dat$wt) 
+      
+      if(length(fit.risk)==1) {
+        risks.all.ter[[a]]=NA
+      } else {
+        risks.all.ter[[a]]=marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], 
+                                             weights=dat[dat$ph2==1,"wt"], categorical.s=T, t.end=tfinal.tpeak)
+      }
+      
     }
     
-    #    f2=update(form.0, as.formula(paste0(marker.name,"~.")))
-    #    fit.s=nnet::multinom(f2, dat, weights=dat$wt) 
-    
-    if(length(fit.risk)==1) {
-      risks.all.ter[[a]]=NA
-    } else {
-      risks.all.ter[[a]]=marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], 
-                                           weights=dat[dat$ph2==1,"wt"], categorical.s=T, t.end=tfinal.tpeak)
-    }
   }
 }
 #rv$marginalized.risk.over.time=list()
@@ -229,10 +261,11 @@ for (a in markers) {
 # get cumulative risk from placebo
 
 if(has.plac) {
+  
   if (TRIAL=="janssen_partA_VL") {
     out=lapply(1:10, function(imp) {
-      dat.plac$EventIndOfInterest = ifelse(dat.plac$EventIndPrimary==1 & dat.plac[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
-      dat.plac$EventIndCompeting  = ifelse(dat.plac$EventIndPrimary==1 & dat.plac[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+      dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
+      dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
       risks = pcr2(form.0, dat.plac, tfinal.tpeak)
       cbind(t=attr(risks,"time"), cumulative=apply(attr(risks,"cumulative"), 1, mean))
     })
@@ -242,6 +275,29 @@ if(has.plac) {
     time.0=common.t
     risk.0=apply(risks, 1, mean)
     
+    
+  } else if (TRIAL=="vat08_combined") {
+    # multiple imputation
+    out=lapply(1:10, function(imp) {
+      dat.plac$EventIndOfInterest  = dat.plac[[config.cor$EventIndPrimary  %.% imp]]
+      dat.plac$EventTimeOfInterest = dat.plac[[config.cor$EventTimePrimary %.% imp]]
+
+      fit.0=coxph(form.s, dat.plac) 
+      risk.0= 1 - exp(-predict(fit.0, type="expected"))
+      time.0= dat.plac[[config.cor$EventTimePrimary %.% imp]]
+      # risk.0 for 7 and 7+ are different
+      keep=dat.plac[[config.cor$EventIndPrimary %.% imp]]==1 & time.0<=tfinal.tpeak
+      risk.0 = risk.0[keep]
+      time.0 = time.0[keep]
+      list(time=time.0, risk=risk.0)
+    })
+    
+    all.t=lapply(out, function(x) x$time)
+    common.t = Reduce(intersect, all.t)
+    risks = sapply(out, simplify="array", function(x) x$risk[x$time %in% common.t])
+    time.0=common.t; risk.0=apply(risks, 1, mean, na.rm=T)
+    
+      
   } else {
     fit.0=coxph(form.s, dat.plac) 
     risk.0= 1 - exp(-predict(fit.0, type="expected"))
@@ -250,6 +306,7 @@ if(has.plac) {
     keep=dat.plac[[config.cor$EventIndPrimary]]==1 & time.0<=tfinal.tpeak
     risk.0 = risk.0[keep]
     time.0 = time.0[keep]
+    
   }
 }
 
@@ -265,10 +322,9 @@ if(has.plac) {
 
 lwd=2
 ylim=c(0,
-       max(max(sapply(markers, function(a) 
-             max(risks.all.ter[[a]]$risk [risks.all.ter[[a]]$time<=tfinal.tpeak,])
-           )),
-           if(has.plac) risk.0)
+       max(
+         max(sapply(markers, function(a) max(risks.all.ter[[a]]$risk [risks.all.ter[[a]]$time<=tfinal.tpeak,]))),
+         if(has.plac) risk.0)
        )
 
 # hard coding to get the same ylim for bAb and nAb

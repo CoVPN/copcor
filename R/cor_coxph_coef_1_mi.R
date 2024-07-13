@@ -1,5 +1,5 @@
 # Output:
-# one table for continuous markers 
+# two tables for continuous markers 
 # one table for discrete markers
 
 # possible errors:
@@ -14,8 +14,8 @@ cor_coxph_coef_1_mi = function(
   save.results.to,
   config,
   config.cor,
-  all.markers,
-  all.markers.names.short,
+  markers,
+  markers.names.short,
   
   dat.pla.seroneg = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
@@ -33,7 +33,7 @@ cor_coxph_coef_1_mi = function(
   fits=list()
   fits.scaled=list()
   for (i in 1:2) { # 1: not scaled, 2: scaled
-    for (a in all.markers) {
+    for (a in markers) {
       
       models=lapply(1:10, function(imp) {
         # when this script becomes a function, mclapply runs into error:   unable to fork, possible reason: Cannot allocate memory
@@ -130,7 +130,7 @@ cor_coxph_coef_1_mi = function(
       # compute p value based on Gaussian
       formatDouble(2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F), 3, remove.leading0=F)
     )
-    rownames(tab.1)=all.markers.names.short
+    rownames(tab.1)=markers.names.short
     tab.1
     
     mytex(tab.1, file.name=paste0("CoR_univariable_svycoxph_pretty_",ifelse(i==1,"","scaled_"),fname.suffix), align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
@@ -153,11 +153,11 @@ cor_coxph_coef_1_mi = function(
   ###################################################################################################
   if(verbose) print("regression for trichotomized markers")
   
-  marker.levels = sapply(all.markers, function(a) length(table(dat[[a%.%"cat"]])))
+  marker.levels = sapply(markers, function(a) length(table(dat[[a%.%"cat"]])))
   
   fits.tri=list()
   overall.p.tri=c()
-  for (a in all.markers) {
+  for (a in markers) {
     if(verbose) myprint(a)
     
     models=lapply(1:10, function(imp) {
@@ -204,7 +204,7 @@ cor_coxph_coef_1_mi = function(
     }
     overall.p.tri=c(overall.p.tri, pchisq(stat, length(rows), lower.tail = FALSE))
   }
-  names(overall.p.tri) = all.markers
+  names(overall.p.tri) = markers
   
   overall.p.0=formatDouble(c(rbind(overall.p.tri, NA,NA)), digits=3, remove.leading0 = F);   
   overall.p.0=sub("0.000","<0.001",overall.p.0)
@@ -235,18 +235,18 @@ cor_coxph_coef_1_mi = function(
     out=formatDouble(2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F), 3, remove.leading0=F)
     if (length(out)==1) c(NA,out) else out
   }
-  get.est(all.markers[1])
+  get.est(markers[1])
   
   # regression parameters
-  est=c(rbind(1.00,  sapply(all.markers, function (a) get.est(a))))
-  ci= c(rbind("N/A", sapply(all.markers, function (a) get.ci (a))))
-  p=  c(rbind("N/A", sapply(all.markers, function (a) get.p  (a))))
+  est=c(rbind(1.00,  sapply(markers, function (a) get.est(a))))
+  ci= c(rbind("N/A", sapply(markers, function (a) get.ci (a))))
+  p=  c(rbind("N/A", sapply(markers, function (a) get.p  (a))))
   
   tab=cbind(
     rep(c("Lower","Middle","Upper"), length(p)/3), 
     est, ci, p, overall.p.0
   )
-  tmp=rbind(all.markers.names.short, "", "")
+  tmp=rbind(markers.names.short, "", "")
   rownames(tab)=c(tmp)
   tab
   

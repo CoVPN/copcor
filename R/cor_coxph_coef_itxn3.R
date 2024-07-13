@@ -139,7 +139,7 @@ cor_coxph_coef_itxn3 = function(
   )
   
   
-  # table of effects sizes in different strata
+  # make a table of effects sizes in different strata
   tab.2=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), 
               est.2[1,], ci.2[1,], p.2[1,],
               est.2[2,], ci.2[2,], p.2[2,],
