@@ -282,14 +282,16 @@ if(has.plac) {
       dat.plac$EventIndOfInterest  = dat.plac[[config.cor$EventIndPrimary  %.% imp]]
       dat.plac$EventTimeOfInterest = dat.plac[[config.cor$EventTimePrimary %.% imp]]
 
-      fit.0=coxph(form.s, dat.plac) 
+      # CODE: without model=T, there are errors: object EventTimeOfInterest not found
+      fit.0=coxph(form.s, dat.plac, model=T) 
       risk.0= 1 - exp(-predict(fit.0, type="expected"))
       time.0= dat.plac[[config.cor$EventTimePrimary %.% imp]]
       # risk.0 for 7 and 7+ are different
       keep=dat.plac[[config.cor$EventIndPrimary %.% imp]]==1 & time.0<=tfinal.tpeak
       risk.0 = risk.0[keep]
       time.0 = time.0[keep]
-      list(time=time.0, risk=risk.0)
+      unique_indices <- which(!duplicated(time.0))
+      list(time=time.0[unique_indices], risk=risk.0[unique_indices])
     })
     
     all.t=lapply(out, function(x) x$time)
@@ -505,6 +507,79 @@ for (a in markers) {
     data.ribbon = apply(out, 1:2, mean)
     data.ribbon=as.data.frame(data.ribbon)
     
+  } else   if (TRIAL=="vat08_combined") {
+      
+      # multiple imputation
+      out=sapply(1:10, simplify="array", function(imp) {
+        
+        dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
+        dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
+        
+        f1=update(form.s, as.formula(paste0("~.+",marker.name)))
+        km <- survfit(f1, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"])
+        tmp=summary(km, times=x.time)            
+        
+        if (has.3.levels) {
+          L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
+          n.risk.L <- round(tmp$n.risk[L.idx])
+          cum.L <- round(cumsum(tmp$n.event[L.idx]))
+          tmp.L = cbind(n.risk.L, cum.L)
+          rownames(tmp.L)=tmp$time[L.idx]
+          
+          M.idx=which(tmp$time==0)[2]:(which(tmp$time==0)[3]-1)
+          n.risk.M <- round(tmp$n.risk[M.idx])
+          cum.M <- round(cumsum(tmp$n.event[M.idx]))
+          tmp.M = cbind(n.risk.M, cum.M)
+          rownames(tmp.M)=tmp$time[M.idx]
+          
+          H.idx=which(tmp$time==0)[3]:length(tmp$time==0)
+          n.risk.H <- round(tmp$n.risk[H.idx])
+          cum.H <- round(cumsum(tmp$n.event[H.idx]))
+          tmp.H = cbind(n.risk.H, cum.H)
+          rownames(tmp.H)=tmp$time[H.idx]
+        } else {
+          L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
+          n.risk.L <- round(tmp$n.risk[L.idx])
+          cum.L <- round(cumsum(tmp$n.event[L.idx]))
+          tmp.L = cbind(n.risk.L, cum.L)
+          rownames(tmp.L)=tmp$time[L.idx]
+          
+          H.idx=which(tmp$time==0)[2]:length(tmp$time==0)
+          n.risk.H <- round(tmp$n.risk[H.idx])
+          cum.H <- round(cumsum(tmp$n.event[H.idx]))
+          tmp.H = cbind(n.risk.H, cum.H)
+          rownames(tmp.H)=tmp$time[H.idx]
+        }
+        
+        
+        # add placebo
+        if (has.plac) {
+          dat.plac$EventIndOfInterest  = dat.plac[[config.cor$EventIndPrimary  %.% imp]]
+          dat.plac$EventTimeOfInterest = dat.plac[[config.cor$EventTimePrimary %.% imp]]
+          
+          survfit.P=summary(survfit(form.s, dat.plac), times=x.time)            
+          n.risk.P <- round(survfit.P$n.risk)
+          cum.P <- round(cumsum(survfit.P$n.event))  
+          tmp.P = cbind(n.risk.P, cum.P)
+          rownames(tmp.P)=survfit.P$time
+          if(has.3.levels) {
+            data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H, tmp.P))
+          } else {
+            data.ribbon = cbinduneven(list(tmp.L, tmp.H, tmp.P))
+          }
+        } else {
+          if(has.3.levels) {
+            data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H))
+          } else {
+            data.ribbon = cbinduneven(list(tmp.L, tmp.H))
+          }
+        }
+        as.matrix(data.ribbon)
+      })
+      if (is.list(out)) stop("cor_coxph_risk_plotting.R: data ribon issue - getting different length output for imputed data")
+      data.ribbon = apply(out, 1:2, mean)
+      data.ribbon=as.data.frame(data.ribbon)
+      
   } else {
     f1=update(form.s, as.formula(paste0("~.+",marker.name)))
     km <- survfit(f1, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"])
