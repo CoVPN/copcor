@@ -32,7 +32,7 @@ cor_coxph_coef_n_mi = function(
   
   # multiple imputation
   fits=list()
-  for (a in all.markers) {
+  for (a in all.markers[1:2]) {
   
     models=lapply(1:10, function(imp) {
     # for some unknown reason, mclapply leads to out of memory fault here. change f to as.formula() does not help 
@@ -64,48 +64,7 @@ cor_coxph_coef_n_mi = function(
   est=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1)
   ci= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7)
   p=  getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=10)
-  
-  
-  
-  
-  # fits=list()
-  # for (a in all.markers) {
-  #   
-  #   models=lapply(1:10, function(imp) {
-  #     # for some unknown reason, mclapply leads to out of memory fault here. change f to as.formula() does not help 
-  #     # models=mclapply(1:10, mc.cores = 10, FUN=function(imp) {
-  #     # imp=1
-  #     
-  #     f = update(form.0, as.formula(paste0("~.+", a )) )
-  #     
-  #     dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
-  #     dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
-  #     
-  #     design.vac<-twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat)
-  #     svycoxph(f, design=design.vac) 
-  #     
-  #   })
-  #   
-  #   betas<-MIextract(models, fun=coef)
-  #   vars<- MIextract(models, fun=vcov)
-  #   res<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
-  #   
-  #   fits[[a]]=res
-  # }
-  # 
-  # # remove missInfo and cast as matrix to get a numeric matrix
-  # rows=nrow(fits[[1]])
-  # rows=(rows-(nCoef-1)):rows
-  # res=sapply(fits, simplify="array", function (fit) as.matrix(fit[,!names(fit) %in% c("missInfo")])[rows,,drop=F])
-  # 
-  # # est=signif(exp(res[,1,]), 2)
-  # # ci= matrix(paste0("(", signif(exp(res[,'(lower',]), 2), "-", signif(exp(res[,'upper)',]), 2), ")"), nrow=length(rows))
-  # est=formatDouble(exp(res[,1,]), 2, remove.leading0=F)
-  # ci= matrix(paste0("(", formatDouble(exp(res[,'(lower',]), 2, remove.leading0=F), "-", formatDouble(exp(res[,'upper)',]), 2, remove.leading0=F), ")"), nrow=length(rows))
-  # p=  formatDouble(2*pnorm(abs(res[,1,])/res[,"se",], lower.tail=F), 3, remove.leading0=F)
-  
-  
-  
+
   
   # # include number of cases in table
   # natrisk=nrow(dat)
