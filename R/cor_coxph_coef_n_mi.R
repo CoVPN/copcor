@@ -32,7 +32,7 @@ cor_coxph_coef_n_mi = function(
   
   # multiple imputation
   fits=list()
-  for (a in all.markers[1:2]) {
+  for (a in all.markers) {
   
     models=lapply(1:10, function(imp) {
     # for some unknown reason, mclapply leads to out of memory fault here. change f to as.formula() does not help 
