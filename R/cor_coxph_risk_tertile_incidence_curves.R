@@ -1,7 +1,14 @@
+# makes tertile incidence curves figure and logclog figure
+
 # competing risk is handled transparently through form.0, e.g.
 # multiple imputation is hardcoded by TRIAL
 
 # janssen_partA_VL handling is hard coded. 
+#   outcome is multiple imputed; depends on variant, which is defined globally
+#   marker is multiple imputed
+#   ph2 and wt depends on marker
+
+# vat08_combined handling is hard coded. 
 #   outcome is multiple imputed; depends on variant, which is defined globally
 #   marker is multiple imputed
 #   ph2 and wt depends on marker
@@ -22,7 +29,6 @@ cor_coxph_risk_tertile_incidence_curves = function(
   assay_metadata,
   
   dat.plac = NULL,
-
   for.title="",
   verbose=FALSE
 ) {
@@ -38,7 +44,7 @@ if (is.null(tfinal.tpeak)) stop("missing tfinal.tpeak")
   
 has.plac=!is.null(dat.plac)
   
-myprint(comp.risk, has.plac, for.title)
+myprint(comp.risk, has.plac)
   
 # make form.s from form.0
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
@@ -63,6 +69,7 @@ prev.vacc = if (TRIAL %in% c("janssen_partA_VL")) {
   get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
 }
 
+{
 .mfrow <- c(1, 1)
 
 # origin of followup days, may be different from tpeak
@@ -81,7 +88,7 @@ uloqs=assay_metadata$uloq; names(uloqs)=assays
 lods=assay_metadata$lod; names(lods)=assays
 lloxs=ifelse(llox_labels=="lloq", lloqs, lods)
 lloxs=ifelse(llox_labels=="pos", assay_metadata$pos.cutoff, lloxs)
-
+}
 
 
 if (TRIAL=="janssen_partA_VL") {
@@ -132,8 +139,8 @@ cat("plot marginalized risk curves over time for trichotomized markers\n")
 # no bootstrap
 
 data.ph2 <- dat[dat$ph2==1,]
-
 risks.all.ter=list()
+
 for (a in markers) {        
   
   marker.name=a%.%"cat"    
@@ -397,16 +404,20 @@ for (a in markers) {
   # save source data for images per some journals' requirements
   img.dat=cbind(out$time[out$time<=tfinal.tpeak], out$risk[out$time<=tfinal.tpeak,])
   rownames(img.dat)=img.dat[,1]
-  write(concatList(formatDouble(img.dat[nrow(img.dat),-1], 6), ", "), file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix))
-  # add placebo risk
+  # write a file for caption
+  write(paste0(concatList(formatDouble(
+    c(img.dat[nrow(img.dat),-1], if(has.plac) max(risk.0, na.rm=T))
+    , 6), ", "), "%"), 
+        file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix))
   if(has.plac) {
     tmp=cbind(time.0, risk.0)
     tmp=tmp[order (tmp[,1]),]
     tmp=unique(tmp)    
     rownames(tmp)=tmp[,1]
-    # combine and sort
+    # combine 
     img.dat=cbinduneven(list(img.dat, tmp))
   }
+  # sort
   img.dat=img.dat[order(img.dat[,1]),]
   mywrite.csv(img.dat, paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix))
   
