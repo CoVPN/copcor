@@ -53,7 +53,11 @@ cor_coxph_coef_n_mi = function(
     
     betas<-MIextract(models, fun=coef)
     vars<- MIextract(models, fun=vcov)
-    fits[[a]]=MIcombine(betas,vars)  # MIcombine prints the results, there is no way to silent it
+    
+    # calling summary on the output of MIcombine prints the results
+    # getFormattedSummary calls getFixedEf.MIresult, which uses capture.output, which apparently silences it
+    
+    fits[[a]]=MIcombine(betas,vars)  
   
   }
   
