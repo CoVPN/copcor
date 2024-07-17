@@ -1,17 +1,15 @@
 # makes tertile incidence curves figure and logclog figure
 
-# competing risk is handled transparently through form.0, e.g.
-# multiple imputation is hardcoded by TRIAL
+# competing risk is handled through form.0, and multiple imputation is hardcoded by TRIAL
 
-# janssen_partA_VL handling is hard coded. 
+# janssen_partA_VL 
 #   outcome is multiple imputed; depends on variant, which is defined globally
 #   marker is multiple imputed
 #   ph2 and wt depends on marker
 
-# vat08_combined handling is hard coded. 
-#   outcome is multiple imputed; depends on variant, which is defined globally
-#   marker is multiple imputed
-#   ph2 and wt depends on marker
+# vat08_combined  
+#   outcome is multiple imputed
+
 
 cor_coxph_risk_tertile_incidence_curves = function(
   form.0,
@@ -36,8 +34,26 @@ cor_coxph_risk_tertile_incidence_curves = function(
 
   
 if(verbose) print("Running cor_coxph_risk_tertile_incidence_curves")
+
+#### define mi and comp.risk
+  
+mi = TRIAL %in% c("janssen_partA_VL", "vat08_combined")
   
 comp.risk = is.list(form.0)
+
+set.mi.data = function(dat, config.cor, imp, marker.name=NULL) {
+  if (TRIAL %in% c("janssen_partA_VL")) {
+    dat$EventIndOfInterest = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
+    dat$EventIndCompeting  = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
+    if(!is.null(marker.name)) dat[[marker.name]] = dat[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
+    
+  } else  if (TRIAL == c("vat08_combined")) {
+    dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
+    dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
+  
+  }
+  dat
+}
   
 if(is.null(tfinal.tpeak)) tfinal.tpeak = config.cor$tfinal.tpeak
 if (is.null(tfinal.tpeak)) stop("missing tfinal.tpeak")
@@ -46,30 +62,21 @@ has.plac=!is.null(dat.plac)
   
 myprint(comp.risk, has.plac)
   
-# make form.s from form.0
+# form.s is the null model, i.e. rhs is ~1
 form.s=as.formula(deparse((if(comp.risk) form.0[[1]] else form.0)[[2]])%.%"~1")
 
-# compute prevalence
-# note that these do not have CI
-prev.vacc = if (TRIAL %in% c("janssen_partA_VL")) {
-  mean(sapply(1:10, function(imp) {
-    dat$EventIndOfInterest = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
-    dat$EventIndCompeting  = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
-    get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
-  }))
-  
-} else  if (TRIAL == c("vat08_combined")) {
-  mean(sapply(1:10, function(imp) {
-    dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
-    dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
-    get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
-  }))
-  
-} else {
-  get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
-}
+# # compute prevalence
+# # note that these do not have CI
+# prev.vacc = if (mi) {
+#   mean(sapply(1:10, function(imp) {
+#     dat = set.mi.data(dat, config.cor, imp)
+#     get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
+#   }))
+# } else {
+#   get.marginalized.risk.no.marker(form.0, dat, tfinal.tpeak)
+# }
 
-{
+
 .mfrow <- c(1, 1)
 
 # origin of followup days, may be different from tpeak
@@ -88,7 +95,6 @@ uloqs=assay_metadata$uloq; names(uloqs)=assays
 lods=assay_metadata$lod; names(lods)=assays
 lloxs=ifelse(llox_labels=="lloq", lloqs, lods)
 lloxs=ifelse(llox_labels=="pos", assay_metadata$pos.cutoff, lloxs)
-}
 
 
 if (TRIAL=="janssen_partA_VL") {
@@ -97,7 +103,6 @@ if (TRIAL=="janssen_partA_VL") {
     if (!is.null(dat[[a%.%"_1"]])) dat[[a]] = dat[[a%.%"_1"]]
   }
 }
-
 
 
 ###################################################################################################
@@ -133,6 +138,7 @@ if (TRIAL=="janssen_partA_VL") {
 }
 
 
+
 ################################################################################
 cat("plot marginalized risk curves over time for trichotomized markers\n")
 
@@ -141,6 +147,7 @@ cat("plot marginalized risk curves over time for trichotomized markers\n")
 data.ph2 <- dat[dat$ph2==1,]
 risks.all.ter=list()
 
+# compute risks.all.ter
 for (a in markers) {        
   
   marker.name=a%.%"cat"    
@@ -168,12 +175,9 @@ for (a in markers) {
       
       # multiple imputation
       out=lapply(1:10, function(imp) {
-        # imputed outcome
-        data.ph2$EventIndOfInterest = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
-        data.ph2$EventIndCompeting  = ifelse(data.ph2$EventIndPrimary==1 & data.ph2[["seq1.variant.hotdeck"%.%imp]]!=variant, 1, 0)
-        # imputed marker
-        data.ph2[[marker.name]] = data.ph2[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
-        
+        # impute outcome
+        data.ph2 = set.mi.data(data.ph2, config.cor, imp, marker.name)
+
         newdata=data.ph2
         out=lapply(ss, function(s) {
           newdata[[marker.name]]=s
@@ -204,24 +208,21 @@ for (a in markers) {
     }
     
 
-  } else {
+  } else { # not competing risk
     
     f1=update(form.0, as.formula(paste0("~.+",marker.name)))        
-    
-    run.svycoxph = function(f, design) {
-      fit=try(svycoxph(f, design=design), silent=T)
-      if (inherits(fit,"try-error")) NA else fit
-    }
     
     if (TRIAL == c("vat08_combined")) {
       
       # multiple imputation
       out=lapply(1:10, function(imp) {
-        dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
-        dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
-        fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
-        marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"], categorical.s=T, t.end=tfinal.tpeak)
-      
+        dat = set.mi.data(dat, config.cor, imp)
+        fit.risk=try(svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat)))
+        if (inherits(fit.risk, "try-error")) {
+          NULL
+        } else {
+          marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"], categorical.s=T, t.end=tfinal.tpeak)
+        }
       })
       
       all.t=lapply(out, function(x) x$time)
@@ -232,15 +233,12 @@ for (a in markers) {
     } else {
       
       if (all(dat$wt==1)) {
-        fit.risk=coxph(f1, dat)         # all ph1 are ph2; syvcoxph throws an error, thus use coxph
+        fit.risk=try(coxph(f1, dat))         # all ph1 are ph2; syvcoxph throws an error, thus use coxph
       } else {
-        fit.risk=run.svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat))
+        fit.risk=try(svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat)))
       }
       
-      #    f2=update(form.0, as.formula(paste0(marker.name,"~.")))
-      #    fit.s=nnet::multinom(f2, dat, weights=dat$wt) 
-      
-      if(length(fit.risk)==1) {
+      if(inherits(fit,"try-error")) {
         risks.all.ter[[a]]=NA
       } else {
         risks.all.ter[[a]]=marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], 
@@ -250,18 +248,16 @@ for (a in markers) {
     }
     
   }
-}
-#rv$marginalized.risk.over.time=list()
-#for (a in assays) rv$marginalized.risk.over.time[[a]] = risks.all.ter[[a]]
+} # end: compute risks.all.ter
 
-# get cumulative risk from placebo
+
+# compute time.0 and risk.0 from placebo
 
 if(has.plac) {
   
   if (TRIAL=="janssen_partA_VL") {
     out=lapply(1:10, function(imp) {
-      dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
-      dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
+      dat.plac = set.mi.data(dat.plac, config.cor, imp)
       risks = pcr2(form.0, dat.plac, tfinal.tpeak)
       cbind(t=attr(risks,"time"), cumulative=apply(attr(risks,"cumulative"), 1, mean))
     })
@@ -273,11 +269,10 @@ if(has.plac) {
     
     
   } else if (TRIAL=="vat08_combined") {
-    # multiple imputation
+    
     out=lapply(1:10, function(imp) {
-      dat.plac$EventIndOfInterest  = dat.plac[[config.cor$EventIndPrimary  %.% imp]]
-      dat.plac$EventTimeOfInterest = dat.plac[[config.cor$EventTimePrimary %.% imp]]
-
+      dat.plac = set.mi.data(dat.plac, config.cor, imp)
+      
       # CODE: without model=T, there are errors: object EventTimeOfInterest not found
       fit.0=coxph(form.s, dat.plac, model=T) 
       risk.0= 1 - exp(-predict(fit.0, type="expected"))
@@ -306,17 +301,11 @@ if(has.plac) {
     time.0 = time.0[keep]
     
   }
+  
 }
 
 
-#fit.1=coxph(form.s, dat) 
-#risk.1= 1 - exp(-predict(fit.1, type="expected"))
-#time.1= dat[[config.cor$EventTimePrimary]]
-#mypdf(file="tmp")
-#    plot(time.1, risk.1)
-#    mylines(time.0, risk.0, col="gray", lwd=2)
-#    mylegend(x=1, legend=c("placebo","vaccine"), col=c("gray","black"), lty=1)
-#dev.off()
+#### set ylim
 
 lwd=2
 ylim=c(0,
@@ -325,7 +314,9 @@ ylim=c(0,
          if(has.plac) risk.0)
        )
 
-# hard coding to get the same ylim for bAb and nAb
+# special cases
+
+# same ylim for bAb and nAb
 if (COR=="D57azd1222_stage2_delta_nAb" | COR=="D57azd1222_stage2_delta_bAb") {
   ylim=c(0,.09)
 } else if (COR=="D57azd1222_stage2_severe_nAb" | COR=="D57azd1222_stage2_severe_bAb") {
@@ -349,7 +340,10 @@ assay_units = sapply(assay_metadata$assay_label_short, function(x) {
 })
 names(assay_units)=assay_metadata$assay
 
+
+# make plot for one marker at a time till the end of tertile incidence curves
 for (a in markers) {        
+  
   mypdf(oma=c(1,0,0,0), onefile=F, file=paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix), mfrow=.mfrow, mar=c(12,4,5,2))
   par(las=1, cex.axis=0.9, cex.lab=1)# axis label 
   
@@ -372,9 +366,14 @@ for (a in markers) {
               col=c("green3",if(has.3.levels) "green","darkgreen"), 
               type="l", lwd=lwd, make.legend=F, ylab=paste0("Probability* of ",config.cor$txt.endpoint), ylim=ylim, xlab="", las=1, 
               xlim=c(tpeaklag,tfinal.tpeak), at=x.time, xaxt="n")
-    title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
-    title(main=markers.names.long[a], cex.main=.9, line=2)
+    
+    title(main=markers.names.long[a], cex.main=1.1, line=1.5)
     title(main=for.title, cex.main=.9, line=.6)
+    title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
+    
+    # add tpeaklag on the x axis 
+    axis(side=1, at=tpeaklag, label=tpeaklag)
+    
     # if (has.3.levels) {
     #   mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
     #                                .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 12.2, cex=.8, side=1)
@@ -382,7 +381,9 @@ for (a in markers) {
     #   mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
     # }
     
-    assay_unit = paste0(" ", assay_units[marker.name.to.assay(a)])
+    assay_unit = assay_units[marker.name.to.assay(a)]
+    # add a space if assay_unit is not empty
+    if (assay_unit!="") assay_unit = paste0(" ", assay_units[marker.name.to.assay(a)])
     
     if(has.3.levels) {
       legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
@@ -399,6 +400,7 @@ for (a in markers) {
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
              col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2, cex=.8)
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
+    
   }
   
   # save source data for images per some journals' requirements
@@ -408,7 +410,7 @@ for (a in markers) {
   write(paste0(concatList(formatDouble(
     c(img.dat[nrow(img.dat),-1], if(has.plac) max(risk.0, na.rm=T))
     , 6), ", "), "%"), 
-        file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix))
+        file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix, ".txt"))
   if(has.plac) {
     tmp=cbind(time.0, risk.0)
     tmp=tmp[order (tmp[,1]),]
@@ -423,8 +425,8 @@ for (a in markers) {
   
   
   # add data ribbon
+  
   if (TRIAL=="janssen_partA_VL") {
-    
     # ancestral markers have different weights and ph2 indicators
     if (a %in% c("Day29bindSpike","Day29pseudoneutid50")) {
       dat$ph2 = dat$ph2.D29
@@ -433,165 +435,23 @@ for (a in markers) {
       dat$ph2 = dat$ph2.D29variant
       dat$wt = dat$wt.D29variant
     }
+  }
+  
+  # the use of cbinduneven helps to get around these exceptions if they do occur
+  # stopifnot(all(tmp$time[1:length(x.time)]==x.time))
+  # stopifnot(tmp$time[1:length(x.time)+length(x.time)]==x.time)
+  # stopifnot(tmp$time[1:length(x.time)+length(x.time)*2]==x.time)
+  
+  # out is an array. if not multiple imputation, the last dimension has length 1
+  out=sapply(1:ifelse(mi, 10, 1), simplify="array", function(imp) {
     
-    # multiple imputation
-    out=sapply(1:10, simplify="array", function(imp) {
-      
-      form.s = Surv(EventTimePrimaryD29, EventIndOfInterest) ~ 1
-      
-      # imputed endpoint
-      dat$EventIndOfInterest = ifelse(dat$EventIndPrimary==1 & dat[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
-      
-      # imputed markers
-      dat[[marker.name]] = dat[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
-      
-      f1=update(form.s, as.formula(paste0("~.+",marker.name)))
-      km <- survfit(f1, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"])
-      tmp=summary(km, times=x.time)            
-      
-      if (has.3.levels) {
-        L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
-        n.risk.L <- round(tmp$n.risk[L.idx])
-        cum.L <- round(cumsum(tmp$n.event[L.idx]))
-        tmp.L = cbind(n.risk.L, cum.L)
-        rownames(tmp.L)=tmp$time[L.idx]
-        
-        M.idx=which(tmp$time==0)[2]:(which(tmp$time==0)[3]-1)
-        n.risk.M <- round(tmp$n.risk[M.idx])
-        cum.M <- round(cumsum(tmp$n.event[M.idx]))
-        tmp.M = cbind(n.risk.M, cum.M)
-        rownames(tmp.M)=tmp$time[M.idx]
-        
-        H.idx=which(tmp$time==0)[3]:length(tmp$time==0)
-        n.risk.H <- round(tmp$n.risk[H.idx])
-        cum.H <- round(cumsum(tmp$n.event[H.idx]))
-        tmp.H = cbind(n.risk.H, cum.H)
-        rownames(tmp.H)=tmp$time[H.idx]
-      } else {
-        L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
-        n.risk.L <- round(tmp$n.risk[L.idx])
-        cum.L <- round(cumsum(tmp$n.event[L.idx]))
-        tmp.L = cbind(n.risk.L, cum.L)
-        rownames(tmp.L)=tmp$time[L.idx]
-        
-        H.idx=which(tmp$time==0)[2]:length(tmp$time==0)
-        n.risk.H <- round(tmp$n.risk[H.idx])
-        cum.H <- round(cumsum(tmp$n.event[H.idx]))
-        tmp.H = cbind(n.risk.H, cum.H)
-        rownames(tmp.H)=tmp$time[H.idx]
-      }
-      
-      
-      # add placebo
-      if (has.plac) {
-        dat.plac$EventIndOfInterest = ifelse(dat.plac$EventIndPrimary==1 & dat.plac[["seq1.variant.hotdeck"%.%imp]]==variant, 1, 0)
-        survfit.P=summary(survfit(form.s, dat.plac), times=x.time)            
-        n.risk.P <- round(survfit.P$n.risk)
-        cum.P <- round(cumsum(survfit.P$n.event))  
-        tmp.P = cbind(n.risk.P, cum.P)
-        rownames(tmp.P)=survfit.P$time
-        if(has.3.levels) {
-          data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H, tmp.P))
-        } else {
-          data.ribbon = cbinduneven(list(tmp.L, tmp.H, tmp.P))
-        }
-      } else {
-        if(has.3.levels) {
-          data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H))
-        } else {
-          data.ribbon = cbinduneven(list(tmp.L, tmp.H))
-        }
-      }
-      as.matrix(data.ribbon)
-    })
-    if (is.list(out)) stop("cor_coxph_risk_plotting.R: data ribon issue - getting different length output for imputed data")
-    data.ribbon = apply(out, 1:2, mean)
-    data.ribbon=as.data.frame(data.ribbon)
+    if (mi) dat = set.mi.data(dat, config.cor, imp, marker.name)
     
-  } else   if (TRIAL=="vat08_combined") {
-      
-      # multiple imputation
-      out=sapply(1:10, simplify="array", function(imp) {
-        
-        dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
-        dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
-        
-        f1=update(form.s, as.formula(paste0("~.+",marker.name)))
-        km <- survfit(f1, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"])
-        tmp=summary(km, times=x.time)            
-        
-        if (has.3.levels) {
-          L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
-          n.risk.L <- round(tmp$n.risk[L.idx])
-          cum.L <- round(cumsum(tmp$n.event[L.idx]))
-          tmp.L = cbind(n.risk.L, cum.L)
-          rownames(tmp.L)=tmp$time[L.idx]
-          
-          M.idx=which(tmp$time==0)[2]:(which(tmp$time==0)[3]-1)
-          n.risk.M <- round(tmp$n.risk[M.idx])
-          cum.M <- round(cumsum(tmp$n.event[M.idx]))
-          tmp.M = cbind(n.risk.M, cum.M)
-          rownames(tmp.M)=tmp$time[M.idx]
-          
-          H.idx=which(tmp$time==0)[3]:length(tmp$time==0)
-          n.risk.H <- round(tmp$n.risk[H.idx])
-          cum.H <- round(cumsum(tmp$n.event[H.idx]))
-          tmp.H = cbind(n.risk.H, cum.H)
-          rownames(tmp.H)=tmp$time[H.idx]
-        } else {
-          L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
-          n.risk.L <- round(tmp$n.risk[L.idx])
-          cum.L <- round(cumsum(tmp$n.event[L.idx]))
-          tmp.L = cbind(n.risk.L, cum.L)
-          rownames(tmp.L)=tmp$time[L.idx]
-          
-          H.idx=which(tmp$time==0)[2]:length(tmp$time==0)
-          n.risk.H <- round(tmp$n.risk[H.idx])
-          cum.H <- round(cumsum(tmp$n.event[H.idx]))
-          tmp.H = cbind(n.risk.H, cum.H)
-          rownames(tmp.H)=tmp$time[H.idx]
-        }
-        
-        
-        # add placebo
-        if (has.plac) {
-          dat.plac$EventIndOfInterest  = dat.plac[[config.cor$EventIndPrimary  %.% imp]]
-          dat.plac$EventTimeOfInterest = dat.plac[[config.cor$EventTimePrimary %.% imp]]
-          
-          survfit.P=summary(survfit(form.s, dat.plac), times=x.time)            
-          n.risk.P <- round(survfit.P$n.risk)
-          cum.P <- round(cumsum(survfit.P$n.event))  
-          tmp.P = cbind(n.risk.P, cum.P)
-          rownames(tmp.P)=survfit.P$time
-          if(has.3.levels) {
-            data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H, tmp.P))
-          } else {
-            data.ribbon = cbinduneven(list(tmp.L, tmp.H, tmp.P))
-          }
-        } else {
-          if(has.3.levels) {
-            data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H))
-          } else {
-            data.ribbon = cbinduneven(list(tmp.L, tmp.H))
-          }
-        }
-        as.matrix(data.ribbon)
-      })
-      if (is.list(out)) stop("cor_coxph_risk_plotting.R: data ribon issue - getting different length output for imputed data")
-      data.ribbon = apply(out, 1:2, mean)
-      data.ribbon=as.data.frame(data.ribbon)
-      
-  } else {
     f1=update(form.s, as.formula(paste0("~.+",marker.name)))
     km <- survfit(f1, dat[dat$ph2==1,], weights=dat[dat$ph2==1,"wt"])
     tmp=summary(km, times=x.time)            
     
-    # the use of cbinduneven helps to get around these exceptions if they do occur
-    # stopifnot(all(tmp$time[1:length(x.time)]==x.time))
-    # stopifnot(tmp$time[1:length(x.time)+length(x.time)]==x.time)
-    # stopifnot(tmp$time[1:length(x.time)+length(x.time)*2]==x.time)
-    
-    if(has.3.levels) {
+    if (has.3.levels) {
       L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
       n.risk.L <- round(tmp$n.risk[L.idx])
       cum.L <- round(cumsum(tmp$n.event[L.idx]))
@@ -611,6 +471,7 @@ for (a in markers) {
       rownames(tmp.H)=tmp$time[H.idx]
       
     } else {
+      
       L.idx=which(tmp$time==0)[1]:(which(tmp$time==0)[2]-1)
       n.risk.L <- round(tmp$n.risk[L.idx])
       cum.L <- round(cumsum(tmp$n.event[L.idx]))
@@ -621,12 +482,15 @@ for (a in markers) {
       n.risk.H <- round(tmp$n.risk[H.idx])
       cum.H <- round(cumsum(tmp$n.event[H.idx]))
       tmp.H = cbind(n.risk.H, cum.H)
-      rownames(tmp.H)=tmp$time[H.idx]      
+      rownames(tmp.H)=tmp$time[H.idx]
     }
-
+    
     
     # add placebo
     if (has.plac) {
+      
+      if(mi) dat.plac = set.mi.data(dat.plac, config.cor, imp)
+      
       survfit.P=summary(survfit(form.s, dat.plac), times=x.time)            
       n.risk.P <- round(survfit.P$n.risk)
       cum.P <- round(cumsum(survfit.P$n.event))  
@@ -637,7 +501,6 @@ for (a in markers) {
       } else {
         data.ribbon = cbinduneven(list(tmp.L, tmp.H, tmp.P))
       }
-      
     } else {
       if(has.3.levels) {
         data.ribbon = cbinduneven(list(tmp.L, tmp.M, tmp.H))
@@ -646,33 +509,43 @@ for (a in markers) {
       }
     }
     
-  }
+    as.matrix(data.ribbon)
+    
+  })
+    
+  if (is.list(out)) stop("cor_coxph_risk_plotting.R: data ribon issue - getting different length output for imputed data")
+  data.ribbon = apply(out, 1:2, mean)
+  data.ribbon=as.data.frame(data.ribbon)
+    
+  # data.ribbon=data.ribbon[as.numeric(rownames(data.ribbon))>tpeaklag, ] # truncate x.time to after tpeakkag, thus time 0 is not shown
   
-  # truncate x.time to after tpeakkag, thus time 0 is not shown
-  data.ribbon=data.ribbon[as.numeric(rownames(data.ribbon))>tpeaklag, ]
   x.time.1=as.numeric(rownames(data.ribbon))
+  # since the population at risk starts at tpeaklag, the counts really start at tpeaklag
+  if (x.time.1[1]==0) x.time.1[1] = tpeaklag 
   
   cex.text <- 0.7
-  at.label= tpeaklag - (tfinal.tpeak-tpeaklag)/8
+  x.label= tpeaklag - (tfinal.tpeak-tpeaklag)/8
   
-  mtext("No. at risk",side=1,outer=FALSE,line=2.5,at=tpeaklag-2,adj=0,cex=cex.text)
-  mtext(paste0("Low:"),side=1,outer=F,line=3.4,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.L,side=1,outer=FALSE,line=3.4,at=x.time.1,cex=cex.text)
+  line.start=2.2
+  
+  mtext("No. at risk",side=1,outer=FALSE,line=0.5+line.start,at=tpeaklag-2,adj=0,cex=cex.text)
+  mtext(paste0("Low:"),side=1,outer=F,line=1.4+line.start,at=x.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.L,side=1,outer=FALSE,line=1.4+line.start,at=x.time.1,cex=cex.text)
   if (has.3.levels) {
-    mtext(paste0("Med:"),side=1,outer=F,line=4.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.M,side=1,outer=FALSE,line=4.3,at=x.time.1,cex=cex.text)
+    mtext(paste0("Med:"),side=1,outer=F,line=2.3+line.start,at=x.label,adj=0,cex=cex.text);  mtext(data.ribbon$n.risk.M,side=1,outer=FALSE,line=2.3+line.start,at=x.time.1,cex=cex.text)
   }
-  mtext(paste0("High:"),side=1,outer=F,line=5.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.H,side=1,outer=FALSE,line=5.2,at=x.time.1,cex=cex.text)
+  mtext(paste0("High:"),side=1,outer=F,line=3.2+line.start,at=x.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.H,side=1,outer=FALSE,line=3.2+line.start,at=x.time.1,cex=cex.text)
   if (has.plac) {
-    mtext(paste0("Plac:"),side=1,outer=F,line=6.2,at=at.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=6.2,at=x.time.1,cex=cex.text)
+    mtext(paste0("Plac:"),side=1,outer=F,line=4.2+line.start,at=x.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=4.2+line.start,at=x.time.1,cex=cex.text)
   }
   
-  mtext(paste0("Cumulative No. of ",config.cor$txt.endpoint," Endpoints"),side=1,outer=FALSE,line=7.4,at=tpeaklag-2,adj=0,cex=cex.text)
-  mtext(paste0("Low:"),side=1,outer=FALSE,line=8.3,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.L,side=1,outer=FALSE,line=8.3, at=x.time.1,cex=cex.text)
+  mtext(paste0("Cumulative No. of ",config.cor$txt.endpoint," Endpoints"),side=1,outer=FALSE,line=5.4+line.start,at=tpeaklag-2,adj=0,cex=cex.text)
+  mtext(paste0("Low:"),side=1,outer=FALSE,line=6.3+line.start,at=x.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.L,side=1,outer=FALSE,line=6.3+line.start, at=x.time.1,cex=cex.text)
   if (has.3.levels) {
-    mtext(paste0("Med:"),side=1,outer=FALSE,line=9.2,at=at.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.M,side=1,outer=FALSE,line=9.2 ,at=x.time.1,cex=cex.text)
+    mtext(paste0("Med:"),side=1,outer=FALSE,line=7.2+line.start,at=x.label,adj=0,cex=cex.text);  mtext(data.ribbon$cum.M,side=1,outer=FALSE,line=7.2+line.start ,at=x.time.1,cex=cex.text)
   }
-  mtext(paste0("High:"),side=1,outer=FALSE,line=10.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.H,side=1,outer=FALSE,line=10.1,at=x.time.1,cex=cex.text)
+  mtext(paste0("High:"),side=1,outer=FALSE,line=8.1+line.start,at=x.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.H,side=1,outer=FALSE,line=8.1+line.start,at=x.time.1,cex=cex.text)
   if (has.plac) {
-    mtext(paste0("Plac:"),side=1,outer=FALSE,line=11.1,at=at.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=11.1,at=x.time.1,cex=cex.text)
+    mtext(paste0("Plac:"),side=1,outer=FALSE,line=9.1+line.start,at=x.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=9.1+line.start,at=x.time.1,cex=cex.text)
   }
   
   dev.off()    
@@ -681,6 +554,8 @@ for (a in markers) {
 #
 #cumsum(summary(survfit(form.s, subset(dat, ph2==1)), times=x.time)$n.event)
 #table(subset(dat, yy==1)[["Day"%.%tpeak%.%"pseudoneutid80cat"]])
+
+
 
 
 
