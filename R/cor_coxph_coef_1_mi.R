@@ -194,7 +194,12 @@ cor_coxph_coef_1_mi = function(
     
     betas<-MIextract(models, fun=coef)
     vars<-MIextract(models, fun=vcov)
-    combined.model = MIcombine(betas,vars)
+    
+    
+    capture.output({
+      combined.model<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
+    }, type="output") # type = message captures stderr, type=output is for stdout
+
     fits.tri[[a]]=summary(combined.model)
     
     # get generalized Wald p values
@@ -313,7 +318,11 @@ cor_coxph_coef_1_mi = function(
       })
       betas<-MIextract(models, fun=coef)
       vars<-MIextract(models, fun=vcov)
-      combined.model = MIcombine(betas,vars)
+
+      capture.output({
+        combined.model<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
+      }, type="output") # type = message captures stderr, type=output is for stdout
+
       res<-summary(combined.model) # MIcombine prints the results, there is no way to silent it
       
       est=formatDouble(exp(res[,1]), 2, remove.leading0=F)
