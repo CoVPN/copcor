@@ -28,12 +28,22 @@ cor_coxph_risk_tertile_incidence_curves = function(
   
   dat.plac = NULL,
   for.title="",
+  
+  plac.actually = FALSE,
   verbose=FALSE
 ) {
   
 
   
 if(verbose) print("Running cor_coxph_risk_tertile_incidence_curves")
+  
+if(!plac.actually) {
+  trt.label="Vaccine"
+  cmp.label="Placebo"
+} else {
+  trt.label="Placebo"
+  cmp.label="Vaccine"
+}
 
 #### define mi and comp.risk
   
@@ -390,15 +400,15 @@ for (a in markers) {
     if (assay_unit!="") assay_unit = paste0(" ", assay_units[marker.name.to.assay(a)])
     
     if(has.3.levels) {
-      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
-               paste0("Vaccine medium (", pretty.print(10^q.a[1]), " to ",
+      legend=c(paste0(trt.label, " low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
+               paste0(trt.label, " medium (", pretty.print(10^q.a[1]), " to ",
                                           pretty.print(10^q.a[2]), assay_unit,")"),
-               paste0("Vaccine high (>=", pretty.print(10^q.a[2]), assay_unit,")"),
-               if(has.plac) "Placebo")
+               paste0(trt.label, " high (>=", pretty.print(10^q.a[2]), assay_unit,")"),
+               if(has.plac) cmp.label)
     } else {
-      legend=c(paste0("Vaccine low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
-               paste0("Vaccine high (>=", pretty.print(10^q.a[1]), assay_unit, ")"), 
-               if(has.plac) "Placebo")
+      legend=c(paste0(trt.label, " low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
+               paste0(trt.label, " high (>=", pretty.print(10^q.a[1]), assay_unit, ")"), 
+               if(has.plac) cmp.label)
       
     }
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
@@ -539,7 +549,7 @@ for (a in markers) {
   }
   mtext(paste0("High:"),side=1,outer=F,line=3.2+line.start,at=x.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.H,side=1,outer=FALSE,line=3.2+line.start,at=x.time.1,cex=cex.text)
   if (has.plac) {
-    mtext(paste0("Plac:"),side=1,outer=F,line=4.2+line.start,at=x.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=4.2+line.start,at=x.time.1,cex=cex.text)
+    mtext(paste0(cmp.label, ":"),side=1,outer=F,line=4.2+line.start,at=x.label,adj=0,cex=cex.text); mtext(data.ribbon$n.risk.P,side=1,outer=FALSE,line=4.2+line.start,at=x.time.1,cex=cex.text)
   }
   
   mtext(paste0("Cumulative No. of ",config.cor$txt.endpoint," Endpoints"),side=1,outer=FALSE,line=5.4+line.start,at=tpeaklag-2,adj=0,cex=cex.text)
@@ -549,7 +559,7 @@ for (a in markers) {
   }
   mtext(paste0("High:"),side=1,outer=FALSE,line=8.1+line.start,at=x.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.H,side=1,outer=FALSE,line=8.1+line.start,at=x.time.1,cex=cex.text)
   if (has.plac) {
-    mtext(paste0("Plac:"),side=1,outer=FALSE,line=9.1+line.start,at=x.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=9.1+line.start,at=x.time.1,cex=cex.text)
+    mtext(paste0(cmp.label, ":"),side=1,outer=FALSE,line=9.1+line.start,at=x.label,adj=0,cex=cex.text);mtext(data.ribbon$cum.P,side=1,outer=FALSE,line=9.1+line.start,at=x.time.1,cex=cex.text)
   }
   
   dev.off()    
@@ -585,7 +595,7 @@ for (a in markers) {
     title(main=for.title, line=.6, cex.main=.9)
     mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
                                  .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 2.8, cex=.8, side=1)   
-    legend=c("Vaccine low","Vaccine medium","Vaccine high")
+    legend=trt.label%.%c(" low"," medium"," high")
     mylegend(x=3, legend=legend, lty=c(1:3), col=c("green3","green","darkgreen"), lwd=2)
   }
   
