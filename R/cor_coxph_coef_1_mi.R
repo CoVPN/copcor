@@ -197,7 +197,7 @@ cor_coxph_coef_1_mi = function(
     
     
     capture.output({
-      combined.model<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
+      combined.model<-MIcombine(betas,vars) # MIcombine prints the results, there is no way to silent it
     }, type="output") # type = message captures stderr, type=output is for stdout
 
     fits.tri[[a]]=summary(combined.model)
@@ -320,7 +320,7 @@ cor_coxph_coef_1_mi = function(
       vars<-MIextract(models, fun=vcov)
 
       capture.output({
-        combined.model<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
+        combined.model<-MIcombine(betas,vars) # MIcombine prints the results, there is no way to silent it
       }, type="output") # type = message captures stderr, type=output is for stdout
 
       res<-summary(combined.model) # MIcombine prints the results, there is no way to silent it
