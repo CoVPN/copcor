@@ -82,7 +82,10 @@ cor_coxph_coef_1_mi = function(
       
       betas<-MIextract(models, fun=coef)
       vars<- MIextract(models, fun=vcov)
-      res<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
+      
+      capture.output({
+        res<-summary(MIcombine(betas,vars)) # MIcombine prints the results, there is no way to silent it
+      }, type="output") # type = message captures stderr, type=output is for stdout
       
       if (i==1) {
         fits[[a]]=res

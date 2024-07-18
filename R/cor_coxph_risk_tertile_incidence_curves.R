@@ -158,6 +158,7 @@ for (a in markers) {
     names(ss)=c("low","high")
   }
   
+  # make risks.all.ter
   if (comp.risk) {
     
     f1=lapply(form.0, function(x) update(x, as.formula(paste0("~.+",marker.name))))
@@ -305,6 +306,7 @@ if(has.plac) {
 }
 
 
+{
 #### set ylim
 
 lwd=2
@@ -339,6 +341,8 @@ assay_units = sapply(assay_metadata$assay_label_short, function(x) {
   out
 })
 names(assay_units)=assay_metadata$assay
+
+}
 
 
 # make plot for one marker at a time till the end of tertile incidence curves
