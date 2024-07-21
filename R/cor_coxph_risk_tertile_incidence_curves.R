@@ -263,7 +263,6 @@ for (a in markers) {
 
 
 # compute time.0 and risk.0 from placebo
-
 if(has.plac) {
   
   if (TRIAL=="janssen_partA_VL") {
@@ -395,7 +394,8 @@ for (a in markers) {
     #   mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])))), line= 12.2, cex=.8, side=1)
     # }
     
-    assay_unit = assay_units[marker.name.to.assay(a)]
+    # fold change should not have units
+    if (startsWith(a,"Delta")) assay_unit="" else assay_unit = assay_units[marker.name.to.assay(a)]
     # add a space if assay_unit is not empty
     if (assay_unit!="") assay_unit = paste0(" ", assay_units[marker.name.to.assay(a)])
     
