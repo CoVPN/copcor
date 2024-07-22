@@ -381,7 +381,7 @@ for (a in markers) {
               xlim=c(tpeaklag,tfinal.tpeak), at=x.time, xaxt="n")
     
     title(main=markers.names.long[a], cex.main=1.1, line=1.5)
-    title(main=for.title, cex.main=.9, line=.6)
+    title(main=for.title, cex.main=.9, line=.4)
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     
     # add tpeaklag on the x axis 
@@ -592,7 +592,7 @@ for (a in markers) {
               las=1, xlim=c(0,tfinal.tpeak), at=x.time, xaxt="n")
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=markers.names.long[a], cex.main=.9, line=2)
-    title(main=for.title, line=.6, cex.main=.9)
+    title(main=for.title, line=.4, cex.main=.9)
     mtext(bquote(cutpoints: list(.(formatDouble(10^q.a[1]/10^floor(q.a[1]),1)) %*% 10^ .(floor(q.a[1])), 
                                  .(formatDouble(10^q.a[2]/10^floor(q.a[2]),1)) %*% 10^ .(floor(q.a[2])))), line= 2.8, cex=.8, side=1)   
     legend=trt.label%.%c(" low"," medium"," high")

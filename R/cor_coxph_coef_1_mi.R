@@ -217,7 +217,8 @@ cor_coxph_coef_1_mi = function(
   overall.p.0=formatDouble(c(rbind(overall.p.tri, NA,NA)), digits=3, remove.leading0 = F);   
   overall.p.0=sub("0.000","<0.001",overall.p.0)
   
-  
+  save(overall.p.tri, file=paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))
+        
   
   ###################################################################################################
   # make trichotomized markers table
