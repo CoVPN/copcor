@@ -34,7 +34,7 @@ cor_coxph_risk_tertile_incidence_curves = function(
 ) {
   
 
-  
+
 if(verbose) print("Running cor_coxph_risk_tertile_incidence_curves")
   
 if(!plac.actually) {
@@ -354,6 +354,8 @@ names(assay_units)=assay_metadata$assay
 }
 
 
+if (file.exists(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))) load(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))
+
 # make plot for one marker at a time till the end of tertile incidence curves
 for (a in markers) {        
   
@@ -414,6 +416,10 @@ for (a in markers) {
     mylegend(x=1, legend=legend, lty=c(1, if(has.3.levels) 2, 3,if(has.plac) 1), 
              col=c("green3", if(has.3.levels) "green","darkgreen",if(has.plac) "gray"), lwd=2, cex=.8)
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
+    
+    # add a legend to show overall p value
+    mylegend(x=4, legend=paste0("Overall P value: ", formatDouble(overall.p.tri[a],3)), lty=1, col="white", cex=0.8)
+    
     
   }
   
