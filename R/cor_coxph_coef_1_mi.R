@@ -20,8 +20,7 @@ cor_coxph_coef_1_mi = function(
   dat.pla.seroneg = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
   
-  forestplot.markers=1:length(markers), # make forestplot for a subset of markers
-  forestplot.xlog=FALSE,
+  forestplot.markers=1:length(markers), # make forestplot only for a subset of markers
   forestplot.x.ticks = NULL, # controls the limit
   
   verbose=FALSE
@@ -107,7 +106,9 @@ cor_coxph_coef_1_mi = function(
     
     # remove missInfo and cast as matrix to get a numeric matrix
     res=as.matrix(mysapply(if(i==1) fits else fits.scaled, function (fit) as.matrix(fit[,names(fit)!="missInfo"])[nrow(fit),]))
-    # exp HR
+    
+    
+    # make table
     tab.1=cbind(
       # est
       formatDouble(exp(res[,1]), 2, remove.leading0=F),
@@ -150,10 +151,8 @@ cor_coxph_coef_1_mi = function(
       min; max
       
       if (forestplot.xlog) {
-        # log scale
-        # make 8 ticks 
-        interval = (log(max)-log(min))/8
-        .forestplot.x.ticks = exp(c(seq(0, log(min), by=-interval), seq(0, log(max), by=interval)))
+        interval = 2
+        .forestplot.x.ticks = interval** unique(c(seq(0, ceiling(log2(max))), seq(floor(log2(min)), 0))) 
         
       } else {
         # linear scale
@@ -171,14 +170,26 @@ cor_coxph_coef_1_mi = function(
     }
     .forestplot.x.ticks
 
-    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix)) 
-      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+    # make two versions, one log and one antilog
+    
+    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_antilog_", ifelse(i==1,"","scaled_"), fname.suffix)) 
+    theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                   nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                   decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
                   table.labels = c("", "  HR (95% CI)",""), 
-                  xlog=forestplot.xlog,
+                  xlog=F,
                   x.ticks = .forestplot.x.ticks # controls the limit
-      )
+    )
+    dev.off()
+    
+    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix)) 
+    theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                  nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
+                  decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                  table.labels = c("", "  HR (95% CI)",""), 
+                  xlog=T,
+                  x.ticks = .forestplot.x.ticks # controls the limit
+    )
     dev.off()
     
     

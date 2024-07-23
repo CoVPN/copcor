@@ -204,6 +204,7 @@ theforestplot <- function(cohort=NA,group,nEvents=NA,totFU=NA,rate=NA,point.esti
                hrzl_lines = list("2" = gpar(lty=1)),
                zero = zero.line,lwd.zero = 0.5,lwd.ci = 0.5,lwd.xaxis = 0.5,xticks = x.ticks,boxsize = 0.1,
                # grid=grid.line,
+               xlog=TRUE,
                txt_gp = fpTxtGp(
                  ticks = gpar(fontfamily = "", cex = fontsize * 0.8),
                  label = gpar(fontfamily = "", cex = fontsize * 0.9),
