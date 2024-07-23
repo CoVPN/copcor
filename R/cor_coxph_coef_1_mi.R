@@ -147,29 +147,33 @@ cor_coxph_coef_1_mi = function(
     if (is.null(forestplot.x.ticks)) {
       min=range(est.ci[2:3,],1)[1]
       max=range(est.ci[2:3,],1)[2]
-
+      min; max
+      
       if (forestplot.xlog) {
         # log scale
-        .forestplot.x.ticks = exp(seq(log(min), log(max), length=9)) 
-      
+        # make 8 ticks 
+        interval = (log(max)-log(min))/8
+        .forestplot.x.ticks = exp(c(seq(0, log(min), by=-interval), seq(0, log(max), by=interval)))
+        
       } else {
         # linear scale
-        # make 8 ticks 
-        # round the interval between ticks to a multiple of 0.2
-        tmp = max(0, round((max-min)/8 / 0.2))
-        interval = tmp * 0.2
-        min = floor(min/interval)
-        max = ceiling(max/interval)
-        myprint(interval, min, max)
-        .forestplot.x.ticks = seq(min, max) * interval
+        # make 8 ticks. round the interval between ticks to a multiple of 0.2
+        interval = max(1, round((max-min)/8 / 0.2)) * 0.2
+        .forestplot.x.ticks = unique(1 + c(seq(0, ceiling((max-1)/interval)), seq(floor((min-1)/interval), 0)) * interval)
+        if (min(.forestplot.x.ticks)<0) {
+          .forestplot.x.ticks = .forestplot.x.ticks[.forestplot.x.ticks>0]
+          .forestplot.x.ticks = unique(c(0,.forestplot.x.ticks))
+        }
       }
+      
     } else{
       .forestplot.x.ticks = forestplot.x.ticks
     }
+    .forestplot.x.ticks
 
     mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
-                  nEvents=nevents, title=paste0(""), p.values=NA, 
+                  nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                   decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
                   table.labels = c("", "  HR (95% CI)",""), 
                   xlog=forestplot.xlog,
