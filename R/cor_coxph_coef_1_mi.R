@@ -19,11 +19,16 @@ cor_coxph_coef_1_mi = function(
   
   dat.pla.seroneg = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
-  verbose=FALSE
   
+  forestplot.markers=1:length(markers), # make forestplot for a subset of markers
+  forestplot.xlog=FALSE,
+  forestplot.x.ticks = NULL, # controls the limit
+  
+  verbose=FALSE
 ) {
   
   if(verbose) print("Running cor_coxph_coef_1")
+  
   
   ###################################################################################################
   if(verbose) print("Regression for continuous markers")
@@ -89,39 +94,17 @@ cor_coxph_coef_1_mi = function(
       
       if (i==1) {
         fits[[a]]=res
-        
-        # save for forest plots
-        # if (TRIAL=='janssen_partA_VL') {
-        #   cox.df=rbind(cox.df, list(
-        #     region = region, 
-        #     variant = variant, 
-        #     assay = a, 
-        #     est = exp(res[nrow(res),"results"]),
-        #     lb =exp(res[nrow(res),"(lower"]),
-        #     ub = exp(res[nrow(res),"upper)"])
-        #   ))
-        # }
-  
       } else {
         fits.scaled[[a]]=res
       }
     }
   }
   
-  # # sanity check
-  # i=1
-  # a="Day29pseudoneutid50"
-  # # remove cases with missing variants info and cases with competing types
-  # dat.tmp=dat
-  # dat.tmp=subset(dat.tmp, !(EventIndPrimary==1 & (is.na(seq1.variant) | seq1.variant!=variant)))
-  # design.vac<-twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat.tmp)
-  # svycoxph(Surv(EventTimePrimaryD29, EventIndPrimary) ~ risk_score + Day29pseudoneutid50, design=design.vac) 
-  
-  
+
   # make continuous markers tables
   # one for per 10 fold inc and one for per SD increase
-  
   for (i in 1:2) { # 1: not scaled, 2: scaled
+    
     # remove missInfo and cast as matrix to get a numeric matrix
     res=as.matrix(mysapply(if(i==1) fits else fits.scaled, function (fit) as.matrix(fit[,names(fit)!="missInfo"])[nrow(fit),]))
     # exp HR
@@ -149,6 +132,52 @@ cor_coxph_coef_1_mi = function(
                          config.cor$txt.endpoint, 
                          " in the vaccine group: Hazard ratios per ",ifelse(i==1,"10-fold","SD")," increment in the marker*")
     )
+    
+    # make forest plot
+    est.ci = rbind(exp(res[forestplot.markers, 1]), 
+                   exp(res[forestplot.markers, '(lower']), 
+                   exp(res[forestplot.markers, 'upper)']), 
+                   2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F)[forestplot.markers]
+                   )
+    colnames(est.ci)=markers.names.short[forestplot.markers]
+    est.ci
+    
+    nevents=rep(NA, ncol(est.ci))
+    
+    if (is.null(forestplot.x.ticks)) {
+      min=range(est.ci[2:3,],1)[1]
+      max=range(est.ci[2:3,],1)[2]
+
+      if (forestplot.xlog) {
+        # log scale
+        .forestplot.x.ticks = exp(seq(log(min), log(max), length=9)) 
+      
+      } else {
+        # linear scale
+        # make 8 ticks 
+        # round the interval between ticks to a multiple of 0.2
+        tmp = max(0, round((max-min)/8 / 0.2))
+        interval = tmp * 0.2
+        min = floor(min/interval)
+        max = ceiling(max/interval)
+        myprint(interval, min, max)
+        .forestplot.x.ticks = seq(min, max) * interval
+      }
+    } else{
+      .forestplot.x.ticks = forestplot.x.ticks
+    }
+
+    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix)) 
+      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                  nEvents=nevents, title=paste0(""), p.values=NA, 
+                  decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                  table.labels = c("", "  HR (95% CI)",""), 
+                  xlog=forestplot.xlog,
+                  x.ticks = .forestplot.x.ticks # controls the limit
+      )
+    dev.off()
+    
+    
   }
   
   

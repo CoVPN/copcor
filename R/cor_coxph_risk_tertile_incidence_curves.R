@@ -354,7 +354,9 @@ names(assay_units)=assay_metadata$assay
 }
 
 
-if (file.exists(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))) load(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))
+if (file.exists(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))) {
+  load(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.suffix,".Rdata"))
+}
 
 # make plot for one marker at a time till the end of tertile incidence curves
 for (a in markers) {        
