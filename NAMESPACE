@@ -34,7 +34,6 @@ importFrom(Hmisc, wtd.quantile)
 importFrom(assertthat, assert_that)
 importFrom(survival, coxph, survfit)
 importFrom(here, here)
-importFrom(forestplot, *)
 importFrom(plotrix, weighted.hist)
 importFrom(future, availableCores)
 importFrom(mitools, MIcombine, MIextract)
@@ -45,6 +44,7 @@ import(methods)
 import(graphics)
 import(grDevices)
 import(parallel)
+import(forestplot)
 
 
 
