@@ -146,25 +146,7 @@ cor_coxph_coef_1_mi = function(
     nevents=rep(NA, ncol(est.ci))
     
     if (is.null(forestplot.x.ticks)) {
-      min=range(est.ci[2:3,],1)[1]
-      max=range(est.ci[2:3,],1)[2]
-      min; max
-      
-      if (forestplot.xlog) {
-        interval = 2
-        .forestplot.x.ticks = interval** unique(c(seq(0, ceiling(log2(max))), seq(floor(log2(min)), 0))) 
-        
-      } else {
-        # linear scale
-        # make 8 ticks. round the interval between ticks to a multiple of 0.2
-        interval = max(1, round((max-min)/8 / 0.2)) * 0.2
-        .forestplot.x.ticks = unique(1 + c(seq(0, ceiling((max-1)/interval)), seq(floor((min-1)/interval), 0)) * interval)
-        if (min(.forestplot.x.ticks)<0) {
-          .forestplot.x.ticks = .forestplot.x.ticks[.forestplot.x.ticks>0]
-          .forestplot.x.ticks = unique(c(0,.forestplot.x.ticks))
-        }
-      }
-      
+      .forestplot.x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog) 
     } else{
       .forestplot.x.ticks = forestplot.x.ticks
     }
@@ -172,7 +154,7 @@ cor_coxph_coef_1_mi = function(
 
     # make two versions, one log and one antilog
     
-    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_antilog_", ifelse(i==1,"","scaled_"), fname.suffix)) 
+    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_antilog_", ifelse(i==1,"","scaled_"), fname.suffix)) 
     theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                   nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                   decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
@@ -182,7 +164,7 @@ cor_coxph_coef_1_mi = function(
     )
     dev.off()
     
-    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "svycoxph_univariable_hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix)) 
+    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix)) 
     theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                   nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                   decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 

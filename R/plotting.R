@@ -216,3 +216,25 @@ theforestplot <- function(cohort=NA,group,nEvents=NA,totFU=NA,rate=NA,point.esti
   }
 
 }
+
+
+get.forestplot.ticks=function(est.ci, forestplot.xlog) {
+  min=range(est.ci[2:3,],1)[1]
+  max=range(est.ci[2:3,],1)[2]
+  min; max
+  
+  if (forestplot.xlog) {
+    interval = 2
+    .forestplot.x.ticks = interval** unique(c(seq(0, ceiling(log2(max))), seq(floor(log2(min)), 0))) 
+    
+  } else {
+    # linear scale
+    # make 8 ticks. round the interval between ticks to a multiple of 0.2
+    interval = max(1, round((max-min)/8 / 0.2)) * 0.2
+    .forestplot.x.ticks = unique(1 + c(seq(0, ceiling((max-1)/interval)), seq(floor((min-1)/interval), 0)) * interval)
+    if (min(.forestplot.x.ticks)<0) {
+      .forestplot.x.ticks = .forestplot.x.ticks[.forestplot.x.ticks>0]
+      .forestplot.x.ticks = unique(c(0,.forestplot.x.ticks))
+    }
+  }
+}
