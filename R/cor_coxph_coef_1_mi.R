@@ -20,7 +20,7 @@ cor_coxph_coef_1_mi = function(
   dat.pla.seroneg = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
   
-  forestplot.markers=1:length(markers), # make forestplot only for a subset of markers
+  forestplot.markers=list(1:length(markers)), # make forestplot only for a list of subsets of markers
 
   verbose=FALSE
 ) {
@@ -134,37 +134,42 @@ cor_coxph_coef_1_mi = function(
     )
     
     # make forest plot
-    est.ci = rbind(exp(res[forestplot.markers, 1]), 
-                   exp(res[forestplot.markers, '(lower']), 
-                   exp(res[forestplot.markers, 'upper)']), 
-                   2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F)[forestplot.markers]
-                   )
-    colnames(est.ci)=markers.names.short[forestplot.markers]
-    est.ci
     
-    nevents=rep(NA, ncol(est.ci))
+    for (iM in 1:length(forestplot.markers)) {
+      
+      est.ci = rbind(exp(res[forestplot.markers[[iM]], 1]), 
+                     exp(res[forestplot.markers[[iM]], '(lower']), 
+                     exp(res[forestplot.markers[[iM]], 'upper)']), 
+                     2*pnorm(abs(res[,1])/res[,"se"], lower.tail=F)[forestplot.markers[[iM]]]
+                     )
+      colnames(est.ci)=markers.names.short[forestplot.markers[[iM]]]
+      est.ci
+      
+      nevents=rep(NA, ncol(est.ci))
+      
+      # make two versions, one log and one antilog
+      
+      mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                    nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
+                    decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                    table.labels = c("", "  HR (95% CI)",""), 
+                    xlog=F,
+                    x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=F)  # controls the limit
+      )
+      dev.off()
+      
+      mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                    nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
+                    decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                    table.labels = c("", "  HR (95% CI)",""), 
+                    xlog=T,
+                    x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=T)  # controls the limit
+      )
+      dev.off()
     
-    # make two versions, one log and one antilog
-    
-    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix)) 
-    theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
-                  nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
-                  decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
-                  table.labels = c("", "  HR (95% CI)",""), 
-                  xlog=F,
-                  x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=F)  # controls the limit
-    )
-    dev.off()
-    
-    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix)) 
-    theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
-                  nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
-                  decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
-                  table.labels = c("", "  HR (95% CI)",""), 
-                  xlog=T,
-                  x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=T)  # controls the limit
-    )
-    dev.off()
+    }
     
     
   }
