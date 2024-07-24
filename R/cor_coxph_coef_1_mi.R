@@ -21,8 +21,7 @@ cor_coxph_coef_1_mi = function(
   show.q=TRUE, # whether to show fwer and q values in tables
   
   forestplot.markers=1:length(markers), # make forestplot only for a subset of markers
-  forestplot.x.ticks = NULL, # controls the limit
-  
+
   verbose=FALSE
 ) {
   
@@ -145,22 +144,15 @@ cor_coxph_coef_1_mi = function(
     
     nevents=rep(NA, ncol(est.ci))
     
-    if (is.null(forestplot.x.ticks)) {
-      .forestplot.x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog) 
-    } else{
-      .forestplot.x.ticks = forestplot.x.ticks
-    }
-    .forestplot.x.ticks
-
     # make two versions, one log and one antilog
     
-    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_antilog_", ifelse(i==1,"","scaled_"), fname.suffix)) 
+    mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix)) 
     theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                   nEvents=nevents, title=paste0(""), p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                   decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
                   table.labels = c("", "  HR (95% CI)",""), 
                   xlog=F,
-                  x.ticks = .forestplot.x.ticks # controls the limit
+                  x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=F)  # controls the limit
     )
     dev.off()
     
@@ -170,7 +162,7 @@ cor_coxph_coef_1_mi = function(
                   decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
                   table.labels = c("", "  HR (95% CI)",""), 
                   xlog=T,
-                  x.ticks = .forestplot.x.ticks # controls the limit
+                  x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=T)  # controls the limit
     )
     dev.off()
     

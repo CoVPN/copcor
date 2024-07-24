@@ -237,4 +237,6 @@ get.forestplot.ticks=function(est.ci, forestplot.xlog) {
       .forestplot.x.ticks = unique(c(0,.forestplot.x.ticks))
     }
   }
+  
+  .forestplot.x.ticks
 }
