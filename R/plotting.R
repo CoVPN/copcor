@@ -172,7 +172,7 @@ theforestplot <- function(cohort=NA,group,nEvents=NA,totFU=NA,rate=NA,point.esti
       # c(table.labels[5], rate),
       c(paste0(table.labels[2]), 
         paste0(sapply(point.estimates, show.decimals), " (", sapply(lower.bounds, show.decimals), ", ", sapply(upper.bounds, show.decimals), ")")),
-      c("P-value", p.values)
+      c("P-val", p.values)
     )}    
   
   replaceNA <- function(x){ifelse(grepl("NA", x), NA, x)}
