@@ -135,6 +135,8 @@ cor_coxph_coef_1_mi = function(
     
     # make forest plot
     
+    if (!is.list(forestplot.markers)) forestplot.markers=list(forestplot.markers)
+    
     for (iM in 1:length(forestplot.markers)) {
       
       est.ci = rbind(exp(res[forestplot.markers[[iM]], 1]), 
