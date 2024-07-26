@@ -12,7 +12,7 @@ export(pcr2, pcr, predictCompetingRisk2, predictCompetingRisk)
 
 export(hotdeckMI, escape, theforestplot, get.forestplot.ticks)
 
-export(cor_coxph_risk_plotting, cor_coxph_risk_bootstrap, cor_coxph_coef_n, cor_coxph_coef_1, cor_coxph_coef_itxn3)
+export(cor_coxph_risk_plotting, cor_coxph_risk_bootstrap, cor_coxph_coef_n, cor_coxph_coef_1, cor_coxph_coef_itxn3, cor_coxph_risk_tertile_incidence_curves)
 
 export(
   PPD2DKE_pseudoneutid50_D614G,
