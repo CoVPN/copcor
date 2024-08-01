@@ -81,7 +81,7 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
 }
 
 
-
+# return a character column not a factor column, because different subpopulations may be cut at different steps
 add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt", verbose=F) {
   
   if(is.null(dat[[wt.col.name]])) stop("col does not exist: "%.%wt.col.name) 
@@ -183,22 +183,31 @@ add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name
     }
     
     if(new.col) {
-      dat[[a %.% "cat"]] = tmp
-      
-      # extract cut points from factor level labels
-      # marker.cutpoints[[a]] <- q.a
-      tmpname = names(table(tmp))[2]
-      tmpname = substr(tmpname, 2, nchar(tmpname)-1)
-      marker.cutpoints[[a]] <- as.numeric(strsplit(tmpname, ",")[[1]])
-      
+      dat[[a %.% "cat"]] = as.character(tmp)
     } else {
       # only touch values in ph2
       dat[[a %.% "cat"]][flag] = as.character(tmp[flag])
-      
     }
     
-    stopifnot(binary.cut | length(table(tmp)) == 3)
+    # extract cut points from factor level labels
+    # marker.cutpoints[[a]] <- q.a
+    tmpname = names(table(tmp))[2]
+    if(is.na(tmpname)) {
+      # this happens when all values are the same
+      tmpname = names(table(tmp))[1]
+    }
+    tmpname = substr(tmpname, 2, nchar(tmpname)-1)
+    marker.cutpoints[[a]] <- as.numeric(strsplit(tmpname, ",")[[1]])
     
+    # rm inf
+    if (marker.cutpoints[[a]][2]==Inf) {
+      marker.cutpoints[[a]] = marker.cutpoints[[a]][1]
+    } else if (marker.cutpoints[[a]][1]==-Inf) {
+      marker.cutpoints[[a]] = marker.cutpoints[[a]][2]
+    }
+      
+    stopifnot(binary.cut & length(marker.cutpoints[[a]]) == 1 | length(table(tmp)) == 3 & length(marker.cutpoints[[a]]) == 2)
+
     if(verbose) {
       print(table(dat[dat[[ph2.col.name]]==1, a %.% "cat"]))
       cat("\n")
