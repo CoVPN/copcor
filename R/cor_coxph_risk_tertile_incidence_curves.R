@@ -35,7 +35,7 @@ cor_coxph_risk_tertile_incidence_curves = function(
   
 
 
-if(verbose) print("Running cor_coxph_risk_tertile_incidence_curves")
+if(verbose) print(paste0("Running cor_coxph_risk_tertile_incidence_curves: ", fname.suffix))
   
 if(!plac.actually) {
   trt.label="Vaccine"
