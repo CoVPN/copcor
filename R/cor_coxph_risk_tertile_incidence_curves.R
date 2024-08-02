@@ -60,7 +60,7 @@ set.mi.data = function(dat, config.cor, imp, marker.name=NULL) {
   } else  if (TRIAL == c("vat08_combined")) {
     dat$EventIndOfInterest  = dat[[config.cor$EventIndPrimary  %.% imp]]
     dat$EventTimeOfInterest = dat[[config.cor$EventTimePrimary %.% imp]]
-    if (COR=="D22vat08_combined_M6_st1.nAb.batch0and1") {
+    if (endsWith(COR,"st1.nAb.batch0and1")) {
       if(!is.null(marker.name)) dat[[marker.name]] = dat[[substr(marker.name, 1, nchar(marker.name)-3)%.%"_"%.%imp%.%"cat"]]
     }
   }
