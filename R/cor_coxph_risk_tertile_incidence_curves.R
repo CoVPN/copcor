@@ -407,7 +407,7 @@ for (a in markers) {
     
     if(has.3.levels) {
       legend=c(paste0(trt.label, " low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
-               paste0(trt.label, " medium (", pretty.print(10^q.a[1]), " to ",
+               paste0(trt.label, " medium (", pretty.print(10^q.a[1]), " to <",
                                           pretty.print(10^q.a[2]), assay_unit,")"),
                paste0(trt.label, " high (>=", pretty.print(10^q.a[2]), assay_unit,")"),
                if(has.plac) cmp.label)
