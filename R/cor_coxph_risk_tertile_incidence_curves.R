@@ -351,6 +351,9 @@ assay_units = sapply(assay_metadata$assay_label_short, function(x) {
   if (length(out)==0) out=""
   out
 })
+if (length(assay_units)==0) {
+  assay_units=rep("",nrow(assay_metadata))
+}
 names(assay_units)=assay_metadata$assay
 
 }
@@ -406,14 +409,14 @@ for (a in markers) {
     if (assay_unit!="") assay_unit = paste0(" ", assay_units[marker.name.to.assay(a)])
     
     if(has.3.levels) {
-      legend=c(paste0(trt.label, " low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
-               paste0(trt.label, " medium (", pretty.print(10^q.a[1]), " to <",
-                                          pretty.print(10^q.a[2]), assay_unit,")"),
-               paste0(trt.label, " high (>=", pretty.print(10^q.a[2]), assay_unit,")"),
+      legend=c(paste0(trt.label, " low (<",   prettyprint(10^q.a[1]), assay_unit, ")"), 
+               paste0(trt.label, " medium (", prettyprint(10^q.a[1]), " to <",
+                                          prettyprint(10^q.a[2]), assay_unit,")"),
+               paste0(trt.label, " high (>=", prettyprint(10^q.a[2]), assay_unit,")"),
                if(has.plac) cmp.label)
     } else {
-      legend=c(paste0(trt.label, " low (<",   pretty.print(10^q.a[1]), assay_unit, ")"), 
-               paste0(trt.label, " high (>=", pretty.print(10^q.a[1]), assay_unit, ")"), 
+      legend=c(paste0(trt.label, " low (<",   prettyprint(10^q.a[1]), assay_unit, ")"), 
+               paste0(trt.label, " high (>=", prettyprint(10^q.a[1]), assay_unit, ")"), 
                if(has.plac) cmp.label)
       
     }
@@ -422,7 +425,7 @@ for (a in markers) {
     if(has.plac) mylines(time.0, risk.0, col="gray", lwd=2, type="l")
     
     # add a legend to show overall p value
-    mylegend(x=4, legend=paste0("Overall P value: ", formatDouble(overall.p.tri[a],3)), lty=1, col="white", cex=0.8)
+    if (exists("overall.p.tri")) mylegend(x=4, legend=paste0("Overall P value: ", formatDouble(overall.p.tri[a],3)), lty=1, col="white", cex=0.8)
     
     
   }
