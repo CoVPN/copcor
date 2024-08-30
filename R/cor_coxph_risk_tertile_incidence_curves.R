@@ -251,7 +251,7 @@ for (a in markers) {
         fit.risk=try(svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat)))
       }
       
-      if(inherits(fit,"try-error")) {
+      if(inherits(fit.risk,"try-error")) {
         risks.all.ter[[a]]=NA
       } else {
         risks.all.ter[[a]]=marginalized.risk(fit.risk, marker.name, dat[dat$ph2==1,], 
