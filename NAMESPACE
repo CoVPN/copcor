@@ -26,7 +26,7 @@ export(
 
 importFrom(kyotil, '%.%', contain, myprint, last, trim, mypdf,
   cbinduneven, concatList , empty.plot , formatDouble , mylegend,
-  mylines , mymatplot , mytex , mywrite.csv, getFixedEf, getFormattedSummary, p.adj.perm, pretty.print, mysapply )
+  mylines , mymatplot , mytex , mywrite.csv, getFixedEf, getFormattedSummary, p.adj.perm, prettyprint, mysapply )
 importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold, 
   marginalized.risk.cont.2, controlled.risk.bias.factor, E.value)
 importFrom(survey, svycoxph, twophase)
