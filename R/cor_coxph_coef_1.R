@@ -418,9 +418,9 @@ cor_coxph_coef_1 = function(
         }
         f= update(form.0, as.formula(paste0("~.+", a.tmp)))
         if (tps) {
-          fits[[a]]=svycoxph(f, design=design_or_dat) 
+          fit=svycoxph(f, design=design_or_dat) 
         } else {
-          fits[[a]]=coxph(f, dat) 
+          fit=coxph(f, dat) 
         }
         var.ind=length(coef(fit)) - length(aa):1 + 1
         
