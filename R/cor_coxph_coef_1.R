@@ -19,6 +19,10 @@ cor_coxph_coef_1 = function(
   
   dat.pla.seroneg = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
+  
+  forestplot.markers=list(1:length(all.markers)), # make forestplot only for a list of subsets of markers, each member of the list is an array
+  for.title="",
+  
   verbose=FALSE
   
 ) {
@@ -80,6 +84,60 @@ cor_coxph_coef_1 = function(
     tmp[nrow(tmp),p.val.col]
   })
   
+  
+  # make forest plots
+  
+  if (!is.list(forestplot.markers)) forestplot.markers=list(forestplot.markers)
+  for (i in 1:2) {# not scaled and scaled
+    
+    res=getFormattedSummary(if (i==1) fits else fits.scaled, exp=F, robust=tps, rows=rows, type=0)
+    res=t(res)
+    # res: est, se, lb, ub, pvalue 
+    p.val.col=which(startsWith(tolower(colnames(res)),"p"))
+    
+    for (iM in 1:length(forestplot.markers)) {
+      
+      est.ci = rbind(exp(res[forestplot.markers[[iM]], 1]), 
+                     exp(res[forestplot.markers[[iM]], 3]), 
+                     exp(res[forestplot.markers[[iM]], 4]), 
+                     res[forestplot.markers[[iM]], p.val.col]
+      )
+      colnames(est.ci)=all.markers.names.short[forestplot.markers[[iM]]]
+      
+      print(res)
+      print(forestplot.markers[[iM]])
+      print(est.ci)
+
+      nevents=rep(NA, ncol(est.ci))
+      
+      # make two versions, one log and one antilog
+      
+      mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                    nEvents=nevents, 
+                    p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
+                    decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                    table.labels = c("", "  HR (95% CI)",""), 
+                    title=for.title, 
+                    xlog=F,
+                    x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=F)  # controls the limit
+      )
+      dev.off()
+      
+      mypdf(onefile=F, width=10,height=4, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                    nEvents=nevents, 
+                    p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
+                    decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                    table.labels = c("", "  HR (95% CI)",""), 
+                    title=for.title, 
+                    xlog=T,
+                    x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=T)  # controls the limit
+      )
+      dev.off()
+      
+    }
+  }
   
   ###################################################################################################
   if(verbose) cat("regression for trichotomized markers\n")
