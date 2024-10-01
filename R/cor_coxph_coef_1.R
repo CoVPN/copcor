@@ -34,7 +34,7 @@ cor_coxph_coef_1 = function(
   
   # twophase sampling 
   tps=inherits(design_or_dat, "survey.design")
-  if (tps) dat = design_or_dat$phase1$full$variables
+  if (tps) dat = design_or_dat$phase1$full$variables else dat=design_or_dat
   
   tpeak=config.cor$tpeak
   
@@ -116,7 +116,7 @@ cor_coxph_coef_1 = function(
       #print(res)
       #print(forestplot.markers[[iM]])
       
-      nevents=rep(NA, ncol(est.ci))
+      nevents=rep(nevents, ncol(est.ci))
       
       # make two versions, one log and one antilog
       
