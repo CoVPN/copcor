@@ -116,7 +116,8 @@ cor_coxph_coef_1 = function(
       #print(res)
       #print(forestplot.markers[[iM]])
       
-      nevents=rep(nevents, ncol(est.ci))
+      # as table.labels below shows, we are not showing nevents
+      nevents=rep(NA, ncol(est.ci))
       
       # make two versions, one log and one antilog
       
