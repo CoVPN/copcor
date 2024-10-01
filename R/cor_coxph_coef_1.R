@@ -1,6 +1,7 @@
 # Output:
-# one table for continuous markers 
-# one table for discrete markers
+# table for continuous markers 
+# table for discrete markers
+# forestplots
 
 # possible errors:
 # Error in .local(x, i, j, ..., value) : not-yet-implemented 'Matrix[<-' method
@@ -104,10 +105,17 @@ cor_coxph_coef_1 = function(
       )
       colnames(est.ci)=all.markers.names.short[forestplot.markers[[iM]]]
       
-      print(res)
-      print(forestplot.markers[[iM]])
+      # inf values break theforestplot
+      est.ci[abs(est.ci)>100]=sign(est.ci)*100
+      
+      # make sure point lb < ub and lb is not too close to 0, which, when log transformed, lead to errors
+      kp = est.ci[2,]>est.ci[3,] | est.ci[2,]<1e-10
+      est.ci=est.ci[,!kp]
       print(est.ci)
-
+      
+      #print(res)
+      #print(forestplot.markers[[iM]])
+      
       nevents=rep(NA, ncol(est.ci))
       
       # make two versions, one log and one antilog

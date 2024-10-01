@@ -1,10 +1,10 @@
-# Make a table to report HR, CI and P value of the last nCoef coefficients. One model per row
+# Output:
+# table to report HR, CI and P value of the last nCoef coefficients. One model per row
+
 # nCoef=1, used for model with one continuous effect of interest
 # nCoef=2, used for model with two continuous effects of interest
 # nCoef=3, used for interaction between two continuous models
-
 # no multitesting b/c we usually do multitesting across continuous and discrete variables
-
 # all.markers, which defines the formula and can be flexible, e.g., Bmarkercat * scale(Day15marker,scale=F)
 
 cor_coxph_coef_n = function(
@@ -14,7 +14,6 @@ cor_coxph_coef_n = function(
   save.results.to,
   config,
   config.cor,
-  
   all.markers,
   all.markers.names.short, 
   
