@@ -379,13 +379,14 @@ cor_coxph_coef_1 = function(
   
   if (run.trichtom) {
   
-  overall.p.1=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FWER"], 3, remove.leading0=F);   overall.p.1=sub("0.000","<0.001",overall.p.1)
-  overall.p.2=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F);   overall.p.2=sub("0.000","<0.001",overall.p.2)
-  
-  # add space
-  overall.p.1=c(rbind(overall.p.1, NA,NA))
-  overall.p.2=c(rbind(overall.p.2, NA,NA))
-  
+  if(show.q) {
+    overall.p.1=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FWER"], 3, remove.leading0=F);   overall.p.1=sub("0.000","<0.001",overall.p.1)
+    overall.p.2=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F);   overall.p.2=sub("0.000","<0.001",overall.p.2)
+    
+    # add space
+    overall.p.1=c(rbind(overall.p.1, NA,NA))
+    overall.p.2=c(rbind(overall.p.2, NA,NA))
+  }
   
   # if "Delta"%.%tpeak%.%"overB" is included, nevents have a problem because some markers may have only two category in the cases
   
