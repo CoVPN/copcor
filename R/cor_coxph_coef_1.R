@@ -24,6 +24,8 @@ cor_coxph_coef_1 = function(
   forestplot.markers=list(1:length(all.markers)), # make forestplot only for a list of subsets of markers, each member of the list is an array
   for.title="",
   
+  run.trichtom=TRUE,
+  
   verbose=FALSE
   
 ) {
@@ -113,17 +115,11 @@ cor_coxph_coef_1 = function(
       est.ci=est.ci[,!kp]
       print(est.ci)
       
-      #print(res)
-      #print(forestplot.markers[[iM]])
-      
-      # as table.labels below shows, we are not showing nevents
-      nevents=rep(NA, ncol(est.ci))
-      
       # make two versions, one log and one antilog
       
-      mypdf(onefile=F, width=10,height=4*ncol(est.ci)/10, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      mypdf(onefile=F, width=10,height=4*ncol(est.ci)/13, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
-                    nEvents=nevents, 
+                    nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                     decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
                     table.labels = c("", "  HR (95% CI)",""), 
@@ -133,9 +129,9 @@ cor_coxph_coef_1 = function(
       )
       dev.off()
       
-      mypdf(onefile=F, width=10,height=4*ncol(est.ci)/10, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      mypdf(onefile=F, width=10,height=4*ncol(est.ci)/13, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
-                    nEvents=nevents, 
+                    nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents, 
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                     decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
                     table.labels = c("", "  HR (95% CI)",""), 
@@ -149,8 +145,10 @@ cor_coxph_coef_1 = function(
   }
   
   ###################################################################################################
+  if (run.trichtom) {
+    
   if(verbose) cat("regression for trichotomized markers\n")
-  
+    
   fits.tri=list()
   for (a in all.markers) {
     if(verbose>=2) myprint(a)
@@ -177,6 +175,7 @@ cor_coxph_coef_1 = function(
   #
   overall.p.0=formatDouble(c(rbind(overall.p.tri, NA,NA)), digits=3, remove.leading0 = F);   overall.p.0=sub("0.000","<0.001",overall.p.0)
   
+  }
   
   
   
@@ -185,6 +184,8 @@ cor_coxph_coef_1 = function(
   
   # If primary_assays is not defined in config, multitesting adjustment is over all assays. 
   # If primary_assays defined, multitesting adjustment is only over this subset. If this set is empty, then no multitesting adjustment is done
+  
+  if (show.q) {
   
   p.unadj.1 = c(cont=pvals.cont, tri=overall.p.tri) 
   # the markers to perform multitestign are defined in config$primary_assays
@@ -304,13 +305,14 @@ cor_coxph_coef_1 = function(
     pvals.adj=rbind(pvals.adj, tri.Day35bindSpike=c(NA,NA,NA))
   }
   
+  p.1=formatDouble(pvals.adj["cont."%.%names(pvals.cont),"p.FWER"], 3, remove.leading0=F); p.1=sub("0.000","<0.001",p.1)
+  p.2=formatDouble(pvals.adj["cont."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F); p.2=sub("0.000","<0.001",p.2)
+  
+  }
   
   
   ###################################################################################################
   # make continuous markers table
-  
-  p.1=formatDouble(pvals.adj["cont."%.%names(pvals.cont),"p.FWER"], 3, remove.leading0=F); p.1=sub("0.000","<0.001",p.1)
-  p.2=formatDouble(pvals.adj["cont."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F); p.2=sub("0.000","<0.001",p.2)
   
   tab.1=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est), t(ci), t(p), if(show.q) p.2, if(show.q) p.1)
   rownames(tab.1)=all.markers.names.short
@@ -374,6 +376,8 @@ cor_coxph_coef_1 = function(
   
   ###################################################################################################
   # make trichotomized markers table
+  
+  if (run.trichtom) {
   
   overall.p.1=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FWER"], 3, remove.leading0=F);   overall.p.1=sub("0.000","<0.001",overall.p.1)
   overall.p.2=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F);   overall.p.2=sub("0.000","<0.001",overall.p.2)
@@ -465,7 +469,7 @@ cor_coxph_coef_1 = function(
   )
   rownames(tab.nop12)=c(rbind(all.markers.names.short, "", ""))
   
-  
+  }
   
   
   ###################################################################################################
@@ -632,11 +636,16 @@ cor_coxph_coef_1 = function(
   
   
   ###################################################################################################
+  if(run.trichtom) {
+    save(fits.cont.coef.ls, fits.tri.coef.ls, file=paste0(save.results.to, paste0("coxph_fits_", fname.suffix, ".Rdata")))
+    # save.s.1, save.s.2
+    save (tab.cont, tab.cat, tab.cont.scaled, file=paste0(save.results.to, paste0("coxph_slopes_", fname.suffix, ".Rdata")))
+  } else {
+    save(fits.cont.coef.ls, file=paste0(save.results.to, paste0("coxph_fits_", fname.suffix, ".Rdata")))
+    # save.s.1, save.s.2
+    save (tab.cont, tab.cont.scaled, file=paste0(save.results.to, paste0("coxph_slopes_", fname.suffix, ".Rdata")))
+  }
   
-  save(fits.cont.coef.ls, fits.tri.coef.ls, file=paste0(save.results.to, paste0("coxph_fits_", fname.suffix, ".Rdata")))
-  
-  # save.s.1, save.s.2
-  save (tab.cont, tab.cat, tab.cont.scaled, pvals.adj, file=paste0(save.results.to, paste0("coxph_slopes_", fname.suffix, ".Rdata")))
   
 }
 
