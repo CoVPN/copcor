@@ -24,7 +24,7 @@ export(
 )
 
 
-importFrom(kyotil, '%.%', contain, myprint, last, trim, mypdf,
+importFrom(kyotil, '%.%', contain, myprint, mylast, trim, mypdf,
   cbinduneven, concatList , empty.plot , formatDouble , mylegend,
   mylines , mymatplot , mytex , mywrite.csv, getFixedEf, getFormattedSummary, p.adj.perm, prettyprint, mysapply )
 importFrom(marginalizedRisk, marginalized.risk, marginalized.risk.threshold, 

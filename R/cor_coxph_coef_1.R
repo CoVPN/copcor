@@ -247,7 +247,7 @@ cor_coxph_coef_1 = function(
             } else {
               # TODO
             }
-            if (length(fit)==1) NA else last(c(getFixedEf(fit)))
+            if (length(fit)==1) NA else mylast(c(getFixedEf(fit)))
           })        
           ,    
           tri=sapply (all.markers, function(a) {
@@ -259,7 +259,7 @@ cor_coxph_coef_1 = function(
             } else {
               # TODO
             }
-            if (length(fit)==1) NA else last(c(getFixedEf(fit)))
+            if (length(fit)==1) NA else mylast(c(getFixedEf(fit)))
           })
         )
         
@@ -621,7 +621,7 @@ cor_coxph_coef_1 = function(
       tab=rbind(tab, "Generalized Wald Test for Markers"=c("", formatDouble(p.gwald,3, remove.leading0 = F))); tab
       mytex(tab, file.name=paste0("CoR_itxn_",aold,"_",bold), align="c", include.colnames = T, save2input.only=T, input.foldername=save.results.to)
       
-      itxn.pvals=c(itxn.pvals, last(getFixedEf(fit)[,"p.value"]))
+      itxn.pvals=c(itxn.pvals, mylast(getFixedEf(fit)[,"p.value"]))
     }    
     
     names(itxn.pvals)=config$interaction

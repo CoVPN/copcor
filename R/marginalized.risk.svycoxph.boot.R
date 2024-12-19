@@ -4,7 +4,7 @@
 #    2 for S>=s
 #    3 for categorical S
 # data: ph1 data
-# t: a time point near to the time of the last observed outcome will be defined
+# t: a time point near to the time of the mylast observed outcome will be defined
 
 
 # competing risk is handled transparently through form.0
@@ -72,7 +72,7 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
         print(fit.risk.1)
         out=marginalized.risk(fit.risk.1, marker.name, data.ph2, t=t, ss=ss, weights=data.ph2$wt, categorical.s=categorical.s)
         if (n.dean) {
-          c(n.dean= last(coef(fit.risk.1)/sqrt(diag(fit.risk.1$var))) * sqrt(1/fit.risk.1$n + 1/fit.risk.1$nevent), out) 
+          c(n.dean= mylast(coef(fit.risk.1)/sqrt(diag(fit.risk.1$var))) * sqrt(1/fit.risk.1$n + 1/fit.risk.1$nevent), out) 
         } else out
       }, 
       warning = function(w) {

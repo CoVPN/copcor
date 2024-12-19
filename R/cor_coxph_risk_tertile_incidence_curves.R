@@ -339,7 +339,7 @@ if (COR=="D57azd1222_stage2_delta_nAb" | COR=="D57azd1222_stage2_delta_bAb") {
 
 if (config$is_ows_trial) {
   x.time<-seq(0,tfinal.tpeak,by=30)
-  if(tfinal.tpeak-last(x.time)>15) x.time=c(x.time, tfinal.tpeak) else x.time[length(x.time)]=tfinal.tpeak
+  if(tfinal.tpeak-mylast(x.time)>15) x.time=c(x.time, tfinal.tpeak) else x.time[length(x.time)]=tfinal.tpeak
 } else {
   x.time<-floor(seq(0,tfinal.tpeak,length=8))
 }
@@ -469,7 +469,7 @@ for (a in markers) {
   # stopifnot(tmp$time[1:length(x.time)+length(x.time)]==x.time)
   # stopifnot(tmp$time[1:length(x.time)+length(x.time)*2]==x.time)
   
-  # out is an array. if not multiple imputation, the last dimension has length 1
+  # out is an array. if not multiple imputation, the mylast dimension has length 1
   out=sapply(1:ifelse(mi, 10, 1), simplify="array", function(imp) {
     
     if (mi) dat = set.mi.data(dat, config.cor, imp, marker.name)
