@@ -231,6 +231,7 @@ for (a in markers) {
       out=lapply(1:10, function(imp) {
         dat = set.mi.data(dat, config.cor, imp, marker.name)
         fit.risk=try(svycoxph(f1, design=twophase(id=list(~1,~1), strata=list(NULL,~Wstratum), subset=~ph2, data=dat)))
+        # fit.risk=try(svycoxph(f1, design=svydesign(id=~1, strata=~Wstratum, weights=~wt, data=dat[dat$ph2==1,])))
         if (inherits(fit.risk, "try-error")) {
           NULL
         } else {
@@ -290,7 +291,14 @@ if(has.plac) {
       risk.0= 1 - exp(-predict(fit.0, type="expected"))
       time.0= dat.plac[[config.cor$EventTimePrimary %.% imp]]
       # risk.0 for 7 and 7+ are different
-      keep=dat.plac[[config.cor$EventIndPrimary %.% imp]]==1 & time.0<=tfinal.tpeak
+      keep=dat.plac[[config.cor$EventIndPrimary %.% imp]]==1 & time.0<=tfinal.tpeak 
+
+      # # use ph2 data to make inference due to issue with prev_inf
+      # svycoxph fails because it cannot handle formula with rhs ~1
+      # fit.0=coxph(form.s, dat.plac[dat.plac$ph2==1,], model=T, weights=dat.plac[dat.plac$ph2==1,"wt"])
+      # time.0= dat.plac[dat.plac$ph2==1,config.cor$EventTimePrimary %.% imp]
+      # keep=dat.plac[dat.plac$ph2==1,config.cor$EventTimePrimary %.% imp] & time.0<=tfinal.tpeak
+      
       risk.0 = risk.0[keep]
       time.0 = time.0[keep]
       unique_indices <- which(!duplicated(time.0))
@@ -370,7 +378,7 @@ for (a in markers) {
   par(las=1, cex.axis=0.9, cex.lab=1)# axis label 
   
   marker.name=a%.%"cat"    
-  myprint(a)
+  if(verbose>=2) myprint(a)
   
   has.3.levels = length(levels(dat[[marker.name]]))==3
   
