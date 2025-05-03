@@ -18,7 +18,7 @@ cor_coxph_coef_1 = function(
   all.markers,
   all.markers.names.short,
   
-  dat.pla.seroneg = NULL,
+  dat.plac = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
   
   forestplot.markers=list(1:length(all.markers)), # make forestplot only for a list of subsets of markers, each member of the list is an array
@@ -32,7 +32,7 @@ cor_coxph_coef_1 = function(
   
   if(verbose) print("Running cor_coxph_coef_1")
   
-  has.plac=!is.null(dat.pla.seroneg)
+  has.plac=!is.null(dat.plac)
   
   # twophase sampling 
   tps=inherits(design_or_dat, "survey.design")
@@ -108,7 +108,7 @@ cor_coxph_coef_1 = function(
       colnames(est.ci)=all.markers.names.short[forestplot.markers[[iM]]]
       
       # inf values break theforestplot
-      est.ci[abs(est.ci)>100]=sign(est.ci)*100
+      est.ci[abs(est.ci)>100]=sign(est.ci[abs(est.ci)>100])*100
       
       # make sure point lb < ub and lb is not too close to 0, which, when log transformed, lead to errors
       kp = est.ci[2,]>est.ci[3,] | est.ci[2,]<1e-10
@@ -414,7 +414,7 @@ cor_coxph_coef_1 = function(
   rownames(tab)=c(tmp)
   tab
   tab.cat=tab[1:(nrow(tab)),]
-  #cond.plac=dat.pla.seroneg[[config.cor$EventTimePrimary]]<=tfinal.tpeak # not used anymore
+  #cond.plac=dat.plac[[config.cor$EventTimePrimary]]<=tfinal.tpeak # not used anymore
   
   if(show.q) {
     header=paste0("\\hline\n 
@@ -434,8 +434,8 @@ cor_coxph_coef_1 = function(
     add.to.row=list(list(nrow(tab)), # insert at the beginning of table, and at the end of, say, the first table
                     c(paste0(" \n \\multicolumn{8}{l}{} \\\\ \n", 
                              "\n \\multicolumn{2}{l}{Placebo} & ", 
-                             paste0(sum(dat.pla.seroneg$yy), "/", format(nrow(dat.pla.seroneg), big.mark=",")), "&",  
-                             formatDouble(sum(dat.pla.seroneg$yy)/nrow(dat.pla.seroneg), digits=4, remove.leading0=F), "&",  
+                             paste0(sum(dat.plac$yy), "/", format(nrow(dat.plac), big.mark=",")), "&",  
+                             formatDouble(sum(dat.plac$yy)/nrow(dat.plac), digits=4, remove.leading0=F), "&",  
                              "\\multicolumn{4}{l}{}  \\\\ \n")
                       #"\\hline\n \\multicolumn{4}{l}{Standard Deviation 1 mcg/mL}\\\\ \n"
                     )
@@ -457,8 +457,8 @@ cor_coxph_coef_1 = function(
   
   # save two subjects for collate
   if (has.plac) {
-    save.s.1=paste0(sum(dat.pla.seroneg$yy), "/", format(nrow(dat.pla.seroneg), big.mark=","))
-    save.s.2=formatDouble(sum(dat.pla.seroneg$yy)/nrow(dat.pla.seroneg), digits=4, remove.leading0=F)
+    save.s.1=paste0(sum(dat.plac$yy), "/", format(nrow(dat.plac), big.mark=","))
+    save.s.2=formatDouble(sum(dat.plac$yy)/nrow(dat.plac), digits=4, remove.leading0=F)
   }
   
   
