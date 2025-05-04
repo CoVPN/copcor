@@ -29,7 +29,8 @@ cor_coxph_risk_tertile_incidence_curves = function(
   dat.plac = NULL,
   for.title="",
   
-  plac.actually = FALSE,
+  trt.label = "Vaccine",
+  cmp.label = "Placebo",
   verbose=FALSE
 ) {
   
@@ -37,14 +38,6 @@ cor_coxph_risk_tertile_incidence_curves = function(
 
 if(verbose) print(paste0("Running cor_coxph_risk_tertile_incidence_curves: ", fname.suffix))
   
-if(!plac.actually) {
-  trt.label="Vaccine"
-  cmp.label="Placebo"
-} else {
-  trt.label="Placebo"
-  cmp.label="Vaccine"
-}
-
 #### define mi and comp.risk
   
 mi = TRIAL %in% c("janssen_partA_VL", "vat08_combined")
