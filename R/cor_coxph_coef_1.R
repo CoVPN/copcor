@@ -15,13 +15,13 @@ cor_coxph_coef_1 = function(
   save.results.to,
   config,
   config.cor,
-  all.markers,
-  all.markers.names.short,
+  markers,
+  markers.names.short,
   
   dat.plac = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
   
-  forestplot.markers=list(1:length(all.markers)), # make forestplot only for a list of subsets of markers, each member of the list is an array
+  forestplot.markers=list(1:length(markers)), # make forestplot only for a list of subsets of markers, each member of the list is an array
   for.title="",
   
   run.trichtom=TRUE,
@@ -47,7 +47,7 @@ cor_coxph_coef_1 = function(
   if(verbose) cat("Regression for continuous markers\n")
   
   fits=list()
-  for (a in all.markers) {
+  for (a in markers) {
     f = update(form.0, as.formula(paste0("~.+", a)))
     if (tps) {
       fits[[a]]=svycoxph(f, design=design_or_dat) 
@@ -58,7 +58,7 @@ cor_coxph_coef_1 = function(
   
   # scaled marker
   fits.scaled=list()
-  for (a in all.markers) {
+  for (a in markers) {
     f= update(form.0, as.formula(paste0("~.+scale(", a, ")")))
     if (tps) {
       fits.scaled[[a]]=svycoxph(f, design=design_or_dat) 
@@ -105,16 +105,15 @@ cor_coxph_coef_1 = function(
                      exp(res[forestplot.markers[[iM]], 4]), 
                      res[forestplot.markers[[iM]], p.val.col]
       )
-      colnames(est.ci)=all.markers.names.short[forestplot.markers[[iM]]]
+      colnames(est.ci)=markers.names.short[forestplot.markers[[iM]]]
       
       # inf values break theforestplot
       est.ci[abs(est.ci)>100]=sign(est.ci[abs(est.ci)>100])*100
       
       # make sure point lb < ub and lb is not too close to 0, which, when log transformed, lead to errors
       kp = est.ci[2,]>est.ci[3,] | est.ci[2,]<1e-10
-      est.ci=est.ci[,!kp]
-      print(est.ci)
-      
+      est.ci=est.ci[,!kp,drop=F]
+
       # make two versions, one log and one antilog
       
       mypdf(onefile=F, width=10,height=4*ncol(est.ci)/13, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
@@ -146,35 +145,39 @@ cor_coxph_coef_1 = function(
   
   ###################################################################################################
   if (run.trichtom) {
+      
+    if(verbose) cat("regression for trichotomized markers\n")
+
+    marker.levels = sapply(markers, function(a) length(table(dat[[a%.%"cat"]]))); marker.levels
     
-  if(verbose) cat("regression for trichotomized markers\n")
+    fits.tri=list()
+    for (a in markers) {
+      if(verbose>=2) myprint(a)
+      f = update(form.0, as.formula(paste0("~.+", a, "cat")))
+      if (tps) {
+        fits.tri[[a]]=svycoxph(f, design=design_or_dat) 
+      } else {
+        fits.tri[[a]]=coxph(f, design_or_dat) 
+      }
+    }
+    fits.tri=fits.tri
     
-  fits.tri=list()
-  for (a in all.markers) {
-    if(verbose>=2) myprint(a)
-    f = update(form.0, as.formula(paste0("~.+", a, "cat")))
-    if (tps) {
-      fits.tri[[a]]=svycoxph(f, design=design_or_dat) 
-    } else {
-      fits.tri[[a]]=coxph(f, design_or_dat) 
-    }
-  }
-  fits.tri=fits.tri
-  
-  fits.tri.coef.ls= lapply(fits.tri, function (fit) getFixedEf(fit, robust=tps))
-  
-  
-  rows=length(coef(fits.tri[[1]]))-1:0
-  # get generalized Wald p values
-  overall.p.tri=sapply(fits.tri, function(fit) {
-    if (length(fit)==1) NA else {
-      stat=coef(fit)[rows] %*% solve(vcov(fit,robust=tps)[rows,rows]) %*% coef(fit)[rows]
-      pchisq(stat, length(rows), lower.tail = FALSE)
-    }
-  })
-  #
-  overall.p.0=formatDouble(c(rbind(overall.p.tri, NA,NA)), digits=3, remove.leading0 = F);   overall.p.0=sub("0.000","<0.001",overall.p.0)
-  
+    fits.tri.coef.ls= lapply(fits.tri, function (fit) getFixedEf(fit, robust=tps))
+    
+    
+    # get generalized Wald p values
+    p.cov = length(strsplit(config$covariates, "\\+")[[1]])-1
+    overall.p.tri=sapply(fits.tri, function(fit) {
+      rows = (1+p.cov):length(coef(fit))
+      if (length(fit)==1) NA else {
+        stat=coef(fit)[rows] %*% solve(vcov(fit,robust=tps)[rows,rows]) %*% coef(fit)[rows]
+        pchisq(stat, length(rows), lower.tail = FALSE)
+      }
+    })
+    #
+    overall.p.0=formatDouble(unlist(lapply(markers, function (a) c(overall.p.tri[a], rep(NA,marker.levels[a]-1)))), digits=3, remove.leading0 = F);   
+    overall.p.0=sub("0.000","<0.001",overall.p.0)
+    
   }
   
   
@@ -214,7 +217,7 @@ cor_coxph_coef_1 = function(
       #    # if want to only do multitesting when liveneutmn50 is included
       #    if (!"liveneutmn50" %in% assays) numPerm=5
       
-      # TODO: there is no need to permute all.markers
+      # TODO: there is no need to permute markers
       numPerm = config$num_perm_replicates
       numCores <- unname(ifelse(Sys.info()["sysname"] == "Windows",
                                 1, 
@@ -229,16 +232,16 @@ cor_coxph_coef_1 = function(
         # permute markers in design_or_dat.perm
         new.idx=sample(1:nrow(dat.ph2))
         tmp=dat.ph2
-        for (a in all.markers) {
+        for (a in markers) {
           tmp[[a]]=tmp[[a]][new.idx]
           tmp[[a%.%"cat"]]=tmp[[a%.%"cat"]][new.idx]
         }
         design_or_dat.perm$phase1$sample$variables = tmp
         
-        # rename all.markers so that out has the proper names. this is only effective within permutation
-        names(all.markers)=all.markers
+        # rename markers so that out has the proper names. this is only effective within permutation
+        names(markers)=markers
         out=c(
-          cont=sapply (all.markers, function(a) {
+          cont=sapply (markers, function(a) {
             f= update(form.0, as.formula(paste0("~.+", a)))
             if (tps) {
               fit=try(svycoxph(f, design=design_or_dat.perm), silent=T)
@@ -250,7 +253,7 @@ cor_coxph_coef_1 = function(
             if (length(fit)==1) NA else mylast(c(getFixedEf(fit)))
           })        
           ,    
-          tri=sapply (all.markers, function(a) {
+          tri=sapply (markers, function(a) {
             f= update(form.0, as.formula(paste0("~.+", a, "cat")))
             if (tps) {
               fit=try(svycoxph(f, design=design_or_dat.perm), silent=T)
@@ -315,7 +318,7 @@ cor_coxph_coef_1 = function(
   # make continuous markers table
   
   tab.1=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est), t(ci), t(p), if(show.q) p.2, if(show.q) p.1)
-  rownames(tab.1)=all.markers.names.short
+  rownames(tab.1)=markers.names.short
   tab.1
   
   if (show.q) {
@@ -342,11 +345,11 @@ cor_coxph_coef_1 = function(
   tab.cont=tab.1
   
   tab.1.nop12=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est), t(ci), t(p))
-  rownames(tab.1.nop12)=all.markers.names.short
+  rownames(tab.1.nop12)=markers.names.short
   
   # scaled markers
   tab.1.scaled=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est.scaled), t(ci.scaled), t(p), if(show.q) p.2, if(show.q) p.1)
-  rownames(tab.1.scaled)=all.markers.names.short
+  rownames(tab.1.scaled)=markers.names.short
   tab.1.scaled
   
   if (show.q) {
@@ -384,37 +387,54 @@ cor_coxph_coef_1 = function(
     overall.p.2=formatDouble(pvals.adj["tri."%.%names(pvals.cont),"p.FDR" ], 3, remove.leading0=F);   overall.p.2=sub("0.000","<0.001",overall.p.2)
     
     # add space
-    overall.p.1=c(rbind(overall.p.1, NA,NA))
-    overall.p.2=c(rbind(overall.p.2, NA,NA))
+    overall.p.1=formatDouble(unlist(lapply(markers, function (a) c(pvals.adj["tri."%.%a,"p.FWER"], rep(NA,marker.levels[a]-1)))), digits=3, remove.leading0 = F);   
+    overall.p.1=sub("0.000","<0.001",overall.p.1)
+    overall.p.2=formatDouble(unlist(lapply(markers, function (a) c(pvals.adj["tri."%.%a,"p.FDR"],  rep(NA,marker.levels[a]-1)))), digits=3, remove.leading0 = F);   
+    overall.p.2=sub("0.000","<0.001",overall.p.2)
   }
   
   # if "Delta"%.%tpeak%.%"overB" is included, nevents have a problem because some markers may have only two category in the cases
   
   # n cases and n at risk
-  natrisk = round(c(sapply (all.markers%.%"cat", function(a) aggregate(dat[dat$ph2==1,] [["wt"]], dat[dat$ph2==1,] [a], sum, na.rm=T, drop=F)[,2] )))
-  nevents = round(c(sapply (all.markers%.%"cat", function(a) {
+  natrisk = round(unlist(lapply (markers%.%"cat", function(a) aggregate(dat[dat$ph2==1,] [["wt"]], dat[dat$ph2==1,] [a], sum, na.rm=T, drop=F)[,2] )))
+  nevents = round(unlist(lapply (markers%.%"cat", function(a) {
     aggregate(dat[dat$ph2==1 & dat$yy==1,] [["wt"]], dat[dat$ph2==1 & dat$yy==1,] [a], sum, na.rm=T, drop=F)[,2] 
   }
   )))
   natrisk[is.na(natrisk)]=0
   nevents[is.na(nevents)]=0
   colSums(matrix(natrisk, nrow=3))
+  
   # regression parameters
-  est=c(rbind(1.00,  sapply(fits.tri, function (fit) if(length(fit)==1) rep(NA,2) else getFormattedSummary(list(fit), exp=T, robust=tps, rows=rows, type=1))  ))
-  ci= c(rbind("N/A", sapply(fits.tri, function (fit) if(length(fit)==1) rep(NA,2) else getFormattedSummary(list(fit), exp=T, robust=tps, rows=rows, type=7)) ))
-  p=  c(rbind("N/A", sapply(fits.tri, function (fit) if(length(fit)==1) rep(NA,2) else getFormattedSummary(list(fit), exp=T, robust=tps, rows=rows, type=10)) ))
+  est=unlist(lapply(markers, function (a) 
+    if(length(fits.tri[[a]])==1) rep(NA,marker.levels[a]) else {
+      c(1,     getFormattedSummary(list(fits.tri[[a]]), exp=T, robust=tps, rows=p.cov+1:(marker.levels[[a]]-1), type=1))
+    }
+  ))
+  ci= unlist(lapply(markers, function (a) 
+    if(length(fits.tri[[a]])==1) rep(NA,marker.levels[[a]]) else {
+      c("N/A", getFormattedSummary(list(fits.tri[[a]]), exp=T, robust=tps, rows=p.cov+1:(marker.levels[[a]]-1), type=7)) 
+    }
+  ))
+  p=  unlist(lapply(markers, function (a) 
+    if(length(fits.tri[[a]])==1) rep(NA,marker.levels[[a]]) else {
+      c("N/A", getFormattedSummary(list(fits.tri[[a]]), exp=T, robust=tps, rows=p.cov+1:(marker.levels[[a]]-1), type=10)) 
+    }
+  ))
+  
   
   tab=cbind(
-    rep(c("Lower","Middle","Upper"), length(p)/3), 
+    unlist(lapply(markers, function (a) c("Lower", if (marker.levels[a]==3) "Middle", "Upper"))),
     paste0(nevents, "/", format(natrisk, big.mark=",",digit=0, scientific=F)), 
     formatDouble(nevents/natrisk, digits=4, remove.leading0=F),
-    est, ci, p, overall.p.0, if(show.q) overall.p.2, if(show.q) overall.p.1
+    est, ci, p, 
+    overall.p.0, if(show.q) overall.p.2, if(show.q) overall.p.1
   )
-  tmp=rbind(all.markers.names.short, "", "")
-  rownames(tab)=c(tmp)
-  tab
+  # str(nevents); str(natrisk)
+  rownames(tab)=unlist(lapply(markers, function (a) c(markers.names.short[a],rep("",marker.levels[a]-1)))) 
   tab.cat=tab[1:(nrow(tab)),]
   #cond.plac=dat.plac[[config.cor$EventTimePrimary]]<=tfinal.tpeak # not used anymore
+  
   
   if(show.q) {
     header=paste0("\\hline\n 
@@ -463,12 +483,12 @@ cor_coxph_coef_1 = function(
   
   
   tab.nop12=cbind(
-    rep(c("Lower","Middle","Upper"), length(p)/3), 
+    unlist(lapply(markers, function (a) c("Lower", if (marker.levels[a]==3) "Middle", "Upper"))),
     paste0(nevents, "/", format(natrisk, big.mark=",",digit=0, scientific=F)), 
     formatDouble(nevents/natrisk, digits=4, remove.leading0=F),
     est, ci, p, overall.p.0
   )
-  rownames(tab.nop12)=c(rbind(all.markers.names.short, "", ""))
+  rownames(tab.nop12)=unlist(lapply(markers, function (a) c(markers.names.short[a],rep("",marker.levels[a]-1)))) 
   
   }
   
