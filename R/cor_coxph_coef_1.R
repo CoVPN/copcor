@@ -26,6 +26,7 @@ cor_coxph_coef_1 = function(
   
   run.trichtom=TRUE,
   
+  cmp.label = "Placebo",
   verbose=FALSE
   
 ) {
@@ -453,7 +454,7 @@ cor_coxph_coef_1 = function(
   if (has.plac) {
     add.to.row=list(list(nrow(tab)), # insert at the beginning of table, and at the end of, say, the first table
                     c(paste0(" \n \\multicolumn{8}{l}{} \\\\ \n", 
-                             "\n \\multicolumn{2}{l}{Placebo} & ", 
+                             "\n \\multicolumn{2}{l}{", cmp.label, "} & ", 
                              paste0(sum(dat.plac$yy), "/", format(nrow(dat.plac), big.mark=",")), "&",  
                              formatDouble(sum(dat.plac$yy)/nrow(dat.plac), digits=4, remove.leading0=F), "&",  
                              "\\multicolumn{4}{l}{}  \\\\ \n")
