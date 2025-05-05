@@ -21,7 +21,7 @@ cor_coxph_coef_1 = function(
   dat.plac = NULL,
   show.q=TRUE, # whether to show fwer and q values in tables
   
-  forestplot.markers=list(1:length(markers)), # make forestplot only for a list of subsets of markers, each member of the list is an array
+  forestplot.markers=NULL, # make forestplot only for a list of subsets of markers, each member of the list is an array
   for.title="",
   
   run.trichtom=TRUE,
@@ -32,6 +32,8 @@ cor_coxph_coef_1 = function(
 ) {
   
   if(verbose) print("Running cor_coxph_coef_1")
+  
+  if (is.null(forestplot.markers)) forestplot.markers = list(1:length(markers))
   
   has.plac=!is.null(dat.plac)
   
@@ -46,6 +48,8 @@ cor_coxph_coef_1 = function(
   
   ###################################################################################################
   if(verbose) cat("Regression for continuous markers\n")
+  
+  myboxplot(Day31T4_IFNg_OR_IL2_N_BA.4.5~EventIndPrimary, dat)
   
   fits=list()
   for (a in markers) {
@@ -93,6 +97,7 @@ cor_coxph_coef_1 = function(
   # make forest plots
   
   if (!is.list(forestplot.markers)) forestplot.markers=list(forestplot.markers)
+  
   for (i in 1:2) {# not scaled and scaled
     
     res=getFormattedSummary(if (i==1) fits else fits.scaled, exp=F, robust=tps, rows=rows, type=0)
@@ -119,8 +124,9 @@ cor_coxph_coef_1 = function(
       # make two versions, one log and one antilog
       
       fig.height = 4*ncol(est.ci)/13
-      if(ncol(est.ci)<8) fig.height=2*fig.height
-        
+      if(ncol(est.ci)<=8) fig.height=2*fig.height
+      if(ncol(est.ci)<=4) fig.height=2*fig.height
+      
       mypdf(onefile=F, width=10,height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
