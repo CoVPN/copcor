@@ -49,8 +49,6 @@ cor_coxph_coef_1 = function(
   ###################################################################################################
   if(verbose) cat("Regression for continuous markers\n")
   
-  myboxplot(Day31T4_IFNg_OR_IL2_N_BA.4.5~EventIndPrimary, dat)
-  
   fits=list()
   for (a in markers) {
     f = update(form.0, as.formula(paste0("~.+", a)))
