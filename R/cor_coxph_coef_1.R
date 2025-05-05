@@ -72,7 +72,8 @@ cor_coxph_coef_1 = function(
   fits.cont.coef.ls = lapply(fits, function (fit) getFixedEf(fit, robust=tps))
   
   natrisk=nrow(dat)
-  nevents=sum(dat$yy==1)
+  dat$yy = dat[[as.character(form.0[[2]][[3]])]]
+  nevents = sum(dat$yy==1)
   
   # make pretty table
   rows=length(coef(fits[[1]]))
@@ -117,7 +118,10 @@ cor_coxph_coef_1 = function(
 
       # make two versions, one log and one antilog
       
-      mypdf(onefile=F, width=10,height=4*ncol(est.ci)/13, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      fig.height = 4*ncol(est.ci)/13
+      if(ncol(est.ci)<8) fig.height=2*fig.height
+        
+      mypdf(onefile=F, width=10,height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
@@ -129,7 +133,7 @@ cor_coxph_coef_1 = function(
       )
       dev.off()
       
-      mypdf(onefile=F, width=10,height=4*ncol(est.ci)/13, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      mypdf(onefile=F, width=10,height=fig.height, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents, 
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
