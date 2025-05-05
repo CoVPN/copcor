@@ -115,17 +115,24 @@ cor_coxph_coef_1 = function(
       # inf values break theforestplot
       est.ci[abs(est.ci)>100]=sign(est.ci[abs(est.ci)>100])*100
       
-      # make sure point lb < ub and lb is not too close to 0, which, when log transformed, lead to errors
-      kp = est.ci[2,]>est.ci[3,] | est.ci[2,]<1e-10
-      est.ci=est.ci[,!kp,drop=F]
+      # make sure point lb < ub 
+      if (any(est.ci[2,]>est.ci[3,])) {
+        print(est.ci)
+        print("some lb are greater than ub")
+      }
 
       # make two versions, one log and one antilog
       
       fig.height = 4*ncol(est.ci)/13
-      if(ncol(est.ci)<=8) fig.height=2*fig.height
-      if(ncol(est.ci)<=4) fig.height=2*fig.height
+      if(ncol(est.ci)<=2) {fig.height=4*fig.height
+      } else if(ncol(est.ci)<=4) {fig.height=2*fig.height}
       
-      mypdf(onefile=F, width=11,height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      fig.width = 11
+      if (any(sapply(markers.names.short, nchar)>40)) fig.width=12 # max widt
+      
+      
+      mypdf(onefile=F, width=fig.width, height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
@@ -137,8 +144,15 @@ cor_coxph_coef_1 = function(
       )
       dev.off()
       
-      mypdf(onefile=F, width=11,height=fig.height, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
-      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+      mypdf(onefile=F, width=fig.width,height=fig.height, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+
+      # make sure  lb is not too close to 0, which, when log transformed, lead to errors
+      if (any(est.ci[2,]<1e-10)) {
+        # est.ci=est.ci[,est.ci[2,]<1e-10,drop=F]
+        empty.plot()
+        warning("some lb are less than 1e-10.")
+      } else {
+        theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents, 
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
                     decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
@@ -146,7 +160,8 @@ cor_coxph_coef_1 = function(
                     title=for.title, 
                     xlog=T,
                     x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=T)  # controls the limit
-      )
+        )
+      }
       dev.off()
       
     }
