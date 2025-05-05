@@ -125,7 +125,7 @@ cor_coxph_coef_1 = function(
       if(ncol(est.ci)<=8) fig.height=2*fig.height
       if(ncol(est.ci)<=4) fig.height=2*fig.height
       
-      mypdf(onefile=F, width=10,height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      mypdf(onefile=F, width=11,height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
@@ -137,7 +137,7 @@ cor_coxph_coef_1 = function(
       )
       dev.off()
       
-      mypdf(onefile=F, width=10,height=fig.height, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
+      mypdf(onefile=F, width=11,height=fig.height, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents, 
                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
