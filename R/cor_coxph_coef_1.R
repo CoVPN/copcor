@@ -73,6 +73,7 @@ cor_coxph_coef_1 = function(
   # put coxph model coef together to save
   fits.cont.coef.ls = lapply(fits, function (fit) getFixedEf(fit, robust=tps))
   
+  {
   natrisk=nrow(dat)
   dat$yy = dat[[as.character(form.0[[2]][[3]])]]
   nevents = sum(dat$yy==1)
@@ -90,7 +91,7 @@ cor_coxph_coef_1 = function(
     p.val.col=which(startsWith(tolower(colnames(tmp)),"p"))
     tmp[nrow(tmp),p.val.col]
   })
-  
+  }
   
   # make forest plots
   
@@ -125,8 +126,9 @@ cor_coxph_coef_1 = function(
       
       fig.height = 4*ncol(est.ci)/13
       if(ncol(est.ci)<=2) {fig.height=4*fig.height
+      } else if(ncol(est.ci)<=3) {fig.height=3*fig.height
       } else if(ncol(est.ci)<=4) {fig.height=2*fig.height}
-      
+    
       fig.width = 11
       if (any(sapply(markers.names.short, nchar)>40)) fig.width=12 # max widt
       
@@ -150,7 +152,7 @@ cor_coxph_coef_1 = function(
       if (any(est.ci[2,]<1e-10)) {
         # est.ci=est.ci[,est.ci[2,]<1e-10,drop=F]
         empty.plot()
-        warning("some lb are less than 1e-10.")
+        print("skip log scale forest plot because some lb are less than 1e-10.")
       } else {
         theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents, 
@@ -190,7 +192,11 @@ cor_coxph_coef_1 = function(
     
     
     # get generalized Wald p values
-    p.cov = length(strsplit(config$covariates, "\\+")[[1]])-1
+    
+    p.cov = unname(len(coef(fits.tri[[a]])) - (marker.levels[a] - 1))
+    # covariates may be modified, so this is not fool proof
+    # p.cov = length(strsplit(config$covariates, "\\+")[[1]])-1
+    
     overall.p.tri=sapply(fits.tri, function(fit) {
       rows = (1+p.cov):length(coef(fit))
       if (length(fit)==1) NA else {
@@ -427,7 +433,7 @@ cor_coxph_coef_1 = function(
   )))
   natrisk[is.na(natrisk)]=0
   nevents[is.na(nevents)]=0
-  colSums(matrix(natrisk, nrow=3))
+  # colSums(matrix(natrisk, nrow=3))
   
   # regression parameters
   est=unlist(lapply(markers, function (a) 
@@ -449,7 +455,7 @@ cor_coxph_coef_1 = function(
   
   tab=cbind(
     unlist(lapply(markers, function (a) c("Lower", if (marker.levels[a]==3) "Middle", "Upper"))),
-    paste0(nevents, "/", format(natrisk, big.mark=",",digit=0, scientific=F)), 
+    paste0(nevents, "/", format(natrisk, big.mark=",",digit=0, scientific=F)),
     formatDouble(nevents/natrisk, digits=4, remove.leading0=F),
     est, ci, p, 
     overall.p.0, if(show.q) overall.p.2, if(show.q) overall.p.1

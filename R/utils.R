@@ -27,7 +27,7 @@ escape=function(x) {
 # e.g. Day22pseudoneutid50 => pseudoneutid50, Delta22overBpseudoneutid50 => pseudoneutid50
 marker.name.to.assay=function(a) {
   
-  if (startsWith(a,"Day")) {
+  ret = if (startsWith(a,"Day")) {
     # Day22pseudoneutid50 => pseudoneutid50 
     sub("Day[[0123456789]+", "", a)
     
@@ -59,6 +59,16 @@ marker.name.to.assay=function(a) {
     sub("Delta[[0123456789]+over[[0123456789]+", "", a)
     
   } else stop("marker.name.to.assay: not sure what to do")
+  
+  
+  # T cell markers may end with S1 or S2, but assay meta data only contains S
+  if (endsWith(ret, ".S1") | endsWith(ret, ".S2")) {
+    substr(ret, 1, nchar(ret) - 1)
+  
+  } else {
+    ret
+  
+  }
 }
 
 
