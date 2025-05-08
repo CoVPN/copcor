@@ -31,7 +31,7 @@ cor_coxph_coef_1 = function(
   
 ) {
   
-  if(verbose) print("Running cor_coxph_coef_1")
+  if(verbose) cat("Running cor_coxph_coef_1\n")
   
   if (is.null(forestplot.markers)) forestplot.markers = list(1:length(markers))
   
@@ -135,21 +135,25 @@ cor_coxph_coef_1 = function(
       
       mypdf(onefile=F, width=fig.width, height=fig.height, file=paste0(save.results.to, "hr_forest_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
       
-      theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
-                    nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
-                    p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
-                    decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
-                    table.labels = c("", "  HR (95% CI)",""), 
-                    title=for.title, 
-                    xlog=F,
-                    x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=F)  # controls the limit
-      )
+      if (inherits(try(theforestplot(point.estimates=est.ci[1,], lower.bounds=est.ci[2,], upper.bounds=est.ci[3,], group=colnames(est.ci), 
+                                     nEvents=rep(NA, ncol(est.ci)), # as table.labels below shows, we are not showing nevents
+                                     p.values=formatDouble(est.ci[4,], 3, remove.leading0=F), 
+                                     decimal.places=2, graphwidth=unit(120, "mm"), fontsize=1.2, 
+                                     table.labels = c("", "  HR (95% CI)",""), 
+                                     title=for.title, 
+                                     xlog=F,
+                                     x.ticks = get.forestplot.ticks(est.ci, forestplot.xlog=F)  # controls the limit
+      ), silent=T), "try-error")) {
+        empty.plot()
+        # when are values are extremely small, weird things happen
+        print("skip antilog forest plot because of an error")
+      }        
       dev.off()
-      
+
       mypdf(onefile=F, width=fig.width,height=fig.height, file=paste0(save.results.to, "hr_forest_log_", ifelse(i==1,"","scaled_"), fname.suffix, if (iM>1) iM)) 
 
       # make sure  lb is not too close to 0, which, when log transformed, lead to errors
-      if (any(est.ci[2,]<1e-10)) {
+      if (any(est.ci[2,]<1e-8)) {
         # est.ci=est.ci[,est.ci[2,]<1e-10,drop=F]
         empty.plot()
         print("skip log scale forest plot because some lb are less than 1e-10.")
