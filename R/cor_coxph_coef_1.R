@@ -374,7 +374,7 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per 10-fold increment in the marker. Baseline covariates adjusted for: ", form.0[[3]])
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per 10-fold increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) )
   )
   tab.cont=tab.1
   
@@ -405,7 +405,7 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_pretty_scaled"), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. Baseline covariates adjusted for: ", form.0[[3]])
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")))
   )
   tab.cont.scaled=tab.1.scaled
   
@@ -505,7 +505,7 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_cat_pretty_", fname.suffix), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios for Middle vs. Upper tertile vs. Lower tertile. Baseline covariates adjusted for: ", form.0[[3]])
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios for Middle vs. Upper tertile vs. Lower tertile. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")))
   )
   
   
