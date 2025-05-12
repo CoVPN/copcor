@@ -37,7 +37,11 @@ cor_coxph_risk_tertile_incidence_curves = function(
 
 
 if(verbose) print(paste0("Running cor_coxph_risk_tertile_incidence_curves: ", fname.suffix))
-  
+
+# load overall.p.tri
+tmp=paste0(save.results.to, paste0("coxph_overall_p_tri_", fname.suffix, ".Rdata"))
+if (file.exists(tmp)) load(tmp)  
+    
 #### define mi and comp.risk
   
 mi = TRIAL %in% c("janssen_partA_VL", "vat08_combined")

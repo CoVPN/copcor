@@ -225,7 +225,7 @@ cor_coxph_coef_1 = function(
   if (show.q) {
   
   p.unadj.1 = c(cont=pvals.cont, tri=overall.p.tri) 
-  # the markers to perform multitestign are defined in config$primary_assays
+  # the markers to perform multitesting are defined in config$primary_assays
   p.unadj=c()
   if (!is.null(config$primary_assays)) {
     if (length(config$primary_assays)>0) {
@@ -695,6 +695,7 @@ cor_coxph_coef_1 = function(
     save(fits.cont.coef.ls, fits.tri.coef.ls, file=paste0(save.results.to, paste0("coxph_fits_", fname.suffix, ".Rdata")))
     # save.s.1, save.s.2
     save (tab.cont, tab.cat, tab.cont.scaled, file=paste0(save.results.to, paste0("coxph_slopes_", fname.suffix, ".Rdata")))
+    save (overall.p.tri, file=paste0(save.results.to, paste0("coxph_overall_p_tri_", fname.suffix, ".Rdata")))
   } else {
     save(fits.cont.coef.ls, file=paste0(save.results.to, paste0("coxph_fits_", fname.suffix, ".Rdata")))
     # save.s.1, save.s.2
