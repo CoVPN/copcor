@@ -391,7 +391,7 @@ for (a in markers) {
               rbind(0,out$risk[out$time<=tfinal.tpeak,]), 
               lty=c(1, if(has.3.levels) 5, 2), 
               col=c("darkgreen", if(has.3.levels) "green3", "green"), 
-              type="l", lwd=lwd, make.legend=F, ylab=paste0("Probability* of ",config.cor$txt.endpoint), ylim=ylim, xlab="", las=1, 
+              type="l", lwd=lwd, make.legend=F, ylab=paste0("Probability of ",config.cor$txt.endpoint), ylim=ylim, xlab="", las=1, 
               xlim=c(tpeaklag,tfinal.tpeak), at=x.time, xaxt="n")
     
     title(main=markers.names.long[a], cex.main=1.1, line=1.5)
@@ -606,7 +606,7 @@ for (a in markers) {
   if(length(out)==1) empty.plot() else {
     mymatplot(out$time[out$time<=tfinal.tpeak], log(-log(out$risk[out$time<=tfinal.tpeak,])), 
               lty=1:3, col=c("darkgreen","green3","green"), type="l", lwd=lwd, make.legend=F, 
-              ylab=paste0("log(-log( Probability* of ",config.cor$txt.endpoint," by Day "%.%tfinal.tpeak, " ))"), xlab="", 
+              ylab=paste0("log(-log( Probability of ",config.cor$txt.endpoint," by Day "%.%tfinal.tpeak, " ))"), xlab="", 
               las=1, xlim=c(0,tfinal.tpeak), at=x.time, xaxt="n")
     title(xlab="Days Since Day "%.%tpeak1%.%" Visit", line=2)
     title(main=markers.names.long[a], cex.main=.9, line=2)
