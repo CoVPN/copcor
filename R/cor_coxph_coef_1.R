@@ -82,9 +82,19 @@ cor_coxph_coef_1 = function(
   rows=length(coef(fits[[1]]))
   est=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1)
   ci= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7)
-  p=  getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=10)
   est.scaled=getFormattedSummary(fits.scaled, exp=T, robust=tps, rows=rows, type=1)
   ci.scaled= getFormattedSummary(fits.scaled, exp=T, robust=tps, rows=rows, type=7)
+  p=  getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=10)
+  
+  # special case
+  if (TRIAL=="covail_tcell") {
+    # per 1% increase for functionality scores
+    est1=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1, scale.factor=0.01)
+    ci1= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7, scale.factor=0.01)
+    kp = grepl("FS", markers)
+    est[kp] = est1[kp]
+    ci[kp] = ci1[kp]
+  }
   
   pvals.cont = sapply(fits, function(x) {
     tmp=getFixedEf(x)
@@ -127,8 +137,10 @@ cor_coxph_coef_1 = function(
       fig.height = 4*ncol(est.ci)/13
       if(ncol(est.ci)<=2) {fig.height=4*fig.height
       } else if(ncol(est.ci)<=3) {fig.height=3*fig.height
-      } else if(ncol(est.ci)<=4) {fig.height=2*fig.height}
-    
+      } else if(ncol(est.ci)<=4) {fig.height=2*fig.height
+      } else if(ncol(est.ci)<=12) {fig.height=1.2*fig.height
+      }
+
       fig.width = 11
       if (any(sapply(markers.names.short, nchar)>40)) fig.width=12 # max widt
       
@@ -232,6 +244,12 @@ cor_coxph_coef_1 = function(
       p.unadj = p.unadj.1[c("cont.Day"%.%tpeak%.%config$primary_assays, "tri.Day"%.%tpeak%.%config$primary_assays)]
     } 
   }
+  # print(p.unadj.1)
+  # # alternatively, primary markers may be defined
+  # if (!is.null(config$primary_markers)) {
+  #   p.unadj = p.unadj.1[c("cont."%.%config$primary_markers, "tri."%.%config$primary_markers)]
+  # }
+  
   if (TRIAL=="prevent19") {
     # bindSpike tertiary has no cases in the upper tertile, cannot do P value
     p.unadj = p.unadj[startsWith(names(p.unadj), "cont."), drop=F]
