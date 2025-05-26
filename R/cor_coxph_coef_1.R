@@ -94,6 +94,13 @@ cor_coxph_coef_1 = function(
     kp = grepl("FS", markers)
     est[kp] = est1[kp]
     ci[kp] = ci1[kp]
+    
+    # per 3-fold increase for functionality scores
+    est1=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1, scale.factor=log10(3))
+    ci1= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7, scale.factor=log10(3))
+    kp = !grepl("FS", markers)
+    est[kp] = est1[kp]
+    ci[kp] = ci1[kp]
   }
   
   pvals.cont = sapply(fits, function(x) {
@@ -107,9 +114,24 @@ cor_coxph_coef_1 = function(
   
   if (!is.list(forestplot.markers)) forestplot.markers=list(forestplot.markers)
   
-  for (i in 1:2) {# not scaled and scaled
+  for (i in 1:2) {# fits or fits.scaled
     
+    # res is a matrix with columns corresponding to fits
     res=getFormattedSummary(if (i==1) fits else fits.scaled, exp=F, robust=tps, rows=rows, type=0)
+    
+    # special case
+    if (TRIAL=="covail_tcell" & i==1) {
+      # per 1% increase for functionality scores
+      res1=getFormattedSummary(if (i==1) fits else fits.scaled, exp=F, robust=tps, rows=rows, type=0, scale.factor=0.01)
+      kp = grepl("FS", markers)
+      res[1:4, kp] = res1[1:4, kp]
+
+      # per 3-fold increase for other T cell markers
+      res1=getFormattedSummary(if (i==1) fits else fits.scaled, exp=F, robust=tps, rows=rows, type=0, scale.factor=log10(3))
+      kp = !grepl("FS", markers)
+      res[1:4, kp] = res1[1:4, kp]
+    }
+    
     res=t(res)
     # res: est, se, lb, ub, pvalue 
     p.val.col=which(startsWith(tolower(colnames(res)),"p"))
@@ -138,6 +160,7 @@ cor_coxph_coef_1 = function(
       if(ncol(est.ci)<=2) {fig.height=4*fig.height
       } else if(ncol(est.ci)<=3) {fig.height=3*fig.height
       } else if(ncol(est.ci)<=4) {fig.height=2*fig.height
+      } else if(ncol(est.ci)<=8) {fig.height=1.5*fig.height
       } else if(ncol(est.ci)<=12) {fig.height=1.2*fig.height
       }
 
@@ -375,13 +398,13 @@ cor_coxph_coef_1 = function(
   
   if (show.q) {
     header=paste0("\\hline\n 
-         \\multicolumn{1}{l}{", '', "} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR per 10-fold incr.}                     & \\multicolumn{1}{c}{P-value}   & \\multicolumn{1}{c}{q-value}   & \\multicolumn{1}{c}{FWER} \\\\ 
+         \\multicolumn{1}{l}{", '', "} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL=="covail_tcell", "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}   & \\multicolumn{1}{c}{q-value}   & \\multicolumn{1}{c}{FWER} \\\\ 
          \\multicolumn{1}{l}{Immunologic Marker}            & \\multicolumn{1}{c}{No. at-risk**} & \\multicolumn{1}{c}{Pt. Est.} & \\multicolumn{1}{c}{95\\% CI} & \\multicolumn{1}{c}{} & \\multicolumn{1}{c}{***} & \\multicolumn{1}{c}{} \\\\ 
          \\hline\n 
     ")
   } else {
     header=paste0("\\hline\n 
-         \\multicolumn{1}{l}{", '', "} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR per 10-fold incr.}                     & \\multicolumn{1}{c}{P-value}    \\\\ 
+         \\multicolumn{1}{l}{", '', "} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL=="covail_tcell", "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}    \\\\ 
          \\multicolumn{1}{l}{Immunologic Marker}            & \\multicolumn{1}{c}{No. at-risk**} & \\multicolumn{1}{c}{Pt. Est.} & \\multicolumn{1}{c}{95\\% CI} & \\multicolumn{1}{c}{}  \\\\ 
          \\hline\n 
     ")
@@ -392,7 +415,7 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per 10-fold increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) )
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL=="covail_tcell", "", " per 10-fold increment in the marker"), ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) )
   )
   tab.cont=tab.1
   
