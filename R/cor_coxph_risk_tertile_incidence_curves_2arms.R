@@ -300,6 +300,12 @@ for (a in markers) {
   col1 = c("darkgreen", if(has.3.levels) "green3", "green")
   col2 = c("gray40", if(has.3.levels) "gray60", "gray80")
   
+  # use the same colors for low med high
+  if (startsWith(TRIAL, "nextgen")) {
+    col1 = c("darkgreen", if(has.3.levels) "darkgreen", "darkgreen")
+    col2 = c("gray40", if(has.3.levels) "gray40", "gray40")
+  }
+  
   for (i in 1:2) { # 1: arm1; 2: arm2
     add = i==2
     
