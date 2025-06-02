@@ -398,13 +398,13 @@ cor_coxph_coef_1 = function(
   
   if (show.q) {
     header=paste0("\\hline\n 
-         \\multicolumn{1}{l}{", '', "} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL=="covail_tcell", "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}   & \\multicolumn{1}{c}{q-value}   & \\multicolumn{1}{c}{FWER} \\\\ 
+         \\multicolumn{1}{l}{} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL=="covail_tcell", "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}   & \\multicolumn{1}{c}{q-value}   & \\multicolumn{1}{c}{FWER} \\\\ 
          \\multicolumn{1}{l}{Immunologic Marker}            & \\multicolumn{1}{c}{No. at-risk**} & \\multicolumn{1}{c}{Pt. Est.} & \\multicolumn{1}{c}{95\\% CI} & \\multicolumn{1}{c}{} & \\multicolumn{1}{c}{***} & \\multicolumn{1}{c}{} \\\\ 
          \\hline\n 
     ")
   } else {
     header=paste0("\\hline\n 
-         \\multicolumn{1}{l}{", '', "} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL=="covail_tcell", "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}    \\\\ 
+         \\multicolumn{1}{l}{} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL=="covail_tcell", "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}    \\\\ 
          \\multicolumn{1}{l}{Immunologic Marker}            & \\multicolumn{1}{c}{No. at-risk**} & \\multicolumn{1}{c}{Pt. Est.} & \\multicolumn{1}{c}{95\\% CI} & \\multicolumn{1}{c}{}  \\\\ 
          \\hline\n 
     ")
@@ -419,8 +419,15 @@ cor_coxph_coef_1 = function(
   )
   tab.cont=tab.1
   
-  tab.1.nop12=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est), t(ci), t(p))
-  rownames(tab.1.nop12)=markers.names.short
+  # save a version without rownames
+  mytex(tab.1, file.name="CoR_univariable_svycoxph_prettyNoRowNames_"%.%fname.suffix, align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
+        longtable=T, 
+        label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
+        caption.placement = "top", 
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL=="covail_tcell", "", " per 10-fold increment in the marker"), ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) ),
+        include.rownames = F, 
+        col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
+  )
   
   # scaled markers
   tab.1.scaled=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est.scaled), t(ci.scaled), t(p), if(show.q) p.2, if(show.q) p.1)
@@ -450,6 +457,15 @@ cor_coxph_coef_1 = function(
   )
   tab.cont.scaled=tab.1.scaled
   
+  # save a version without rownames
+  mytex(tab.1.scaled, file.name="CoR_univariable_svycoxph_prettyNoRowNames_scaled_"%.%fname.suffix, align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
+        longtable=T, 
+        label=paste0("tab:CoR_univariable_svycoxph_pretty_scaled"), 
+        caption.placement = "top", 
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " "))),
+        include.rownames = F, 
+        col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
+  )
   
   
   ###################################################################################################
