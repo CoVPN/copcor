@@ -415,19 +415,22 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL=="covail_tcell", "", " per 10-fold increment in the marker"), ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) )
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, 
+                       " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL=="covail_tcell", "", " per 10-fold increment in the marker"), 
+                       ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")),
+                       ", endpoint variable: ", escape(config.cor$EventIndPrimary), ".")
   )
   tab.cont=tab.1
   
-  # save a version without rownames
-  mytex(tab.1, file.name="CoR_univariable_svycoxph_prettyNoRowNames_"%.%fname.suffix, align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
-        longtable=T, 
-        label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
-        caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL=="covail_tcell", "", " per 10-fold increment in the marker"), ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) ),
-        include.rownames = F, 
-        col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
-  )
+  # # save a version without rownames
+  # mytex(tab.1, file.name="CoR_univariable_svycoxph_prettyNoRowNames_"%.%fname.suffix, align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
+  #       longtable=T, 
+  #       label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
+  #       caption.placement = "top", 
+  #       caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL=="covail_tcell", "", " per 10-fold increment in the marker"), ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) ),
+  #       include.rownames = F, 
+  #       col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
+  # )
   
   # scaled markers
   tab.1.scaled=cbind(paste0(nevents, "/", format(natrisk, big.mark=",")), t(est.scaled), t(ci.scaled), t(p), if(show.q) p.2, if(show.q) p.1)
@@ -453,19 +456,22 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_pretty_scaled"), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")))
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, 
+                       " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. ", 
+                       "Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")),
+                       ", endpoint variable: ", escape(config.cor$EventIndPrimary), ".")
   )
   tab.cont.scaled=tab.1.scaled
   
-  # save a version without rownames
-  mytex(tab.1.scaled, file.name="CoR_univariable_svycoxph_prettyNoRowNames_scaled_"%.%fname.suffix, align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
-        longtable=T, 
-        label=paste0("tab:CoR_univariable_svycoxph_pretty_scaled"), 
-        caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " "))),
-        include.rownames = F, 
-        col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
-  )
+  # # save a version without rownames
+  # mytex(tab.1.scaled, file.name="CoR_univariable_svycoxph_prettyNoRowNames_scaled_"%.%fname.suffix, align="c", include.colnames = F, save2input.only=T, input.foldername=save.results.to,
+  #       longtable=T, 
+  #       label=paste0("tab:CoR_univariable_svycoxph_pretty_scaled"), 
+  #       caption.placement = "top", 
+  #       caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per SD increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " "))),
+  #       include.rownames = F, 
+  #       col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
+  # )
   
   
   ###################################################################################################
@@ -562,7 +568,10 @@ cor_coxph_coef_1 = function(
         longtable=T, 
         label=paste0("tab:CoR_univariable_svycoxph_cat_pretty_", fname.suffix), 
         caption.placement = "top", 
-        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios for Middle vs. Upper tertile vs. Lower tertile. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")))
+        caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, 
+                       " in the ", escape(fname.suffix), " group: Hazard ratios for Middle vs. Upper tertile vs. Lower tertile. ",
+                       "Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")),
+                       ", endpoint variable: ", escape(config.cor$EventIndPrimary), ".")
   )
   
   
