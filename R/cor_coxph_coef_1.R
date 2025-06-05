@@ -95,7 +95,7 @@ cor_coxph_coef_1 = function(
     est[kp] = est1[kp]
     ci[kp] = ci1[kp]
     
-    # per 3-fold increase for functionality scores
+    # per 3-fold increase for individual markers
     est1=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1, scale.factor=log10(3))
     ci1= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7, scale.factor=log10(3))
     kp = !grepl("FS", markers)
