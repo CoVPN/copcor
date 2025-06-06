@@ -13,15 +13,6 @@ MNG2imputedIU_pseudoneutid50_BA1  = function(log_titers)  log_titers - 1.185087 
 
 
 
-# _ causes trouble in captions, and that has to be taken care of by putting \protect{} around the word
-escape=function(x) {
-  for (i in c("_","^")) {
-    x=gsub(i, "\\"%.%i, x, fixed = TRUE)
-  }
-  x
-}
-
-
 
 # extract assay name from marker names, which include Day, e.g.
 # e.g. Day22pseudoneutid50 => pseudoneutid50, Delta22overBpseudoneutid50 => pseudoneutid50

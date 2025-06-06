@@ -211,7 +211,7 @@ cor_coxph_coef_1 = function(
   ###################################################################################################
   if (run.trichtom) {
       
-    if(verbose) cat("regression for trichotomized markers\n")
+    if(verbose) cat("Regression for trichotomized markers\n")
 
     marker.levels = sapply(markers, function(a) length(table(dat[[a%.%"cat"]]))); marker.levels
     
