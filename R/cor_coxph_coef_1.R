@@ -78,8 +78,11 @@ cor_coxph_coef_1 = function(
   dat$yy = dat[[as.character(form.0[[2]][[3]])]]
   nevents = sum(dat$yy==1)
   
-  # make pretty table
+  # rows is a single integer pointing to the last coef
   rows=length(coef(fits[[1]]))
+  # p.cov is the number of covariates adjusted
+  p.cov = rows - 1 
+  
   est=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1)
   ci= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7)
   est.scaled=getFormattedSummary(fits.scaled, exp=T, robust=tps, rows=rows, type=1)
@@ -232,7 +235,8 @@ cor_coxph_coef_1 = function(
     
     # get generalized Wald p values
     
-    p.cov = unname(len(coef(fits.tri[[a]])) - (marker.levels[a] - 1))
+    p.cov.1 = unname(len(coef(fits.tri[[a]])) - (marker.levels[a] - 1))
+    stopifnot(p.cov==p.cov.1) # sanity check
     # covariates may be modified, so this is not fool proof
     # p.cov = length(strsplit(config$covariates, "\\+")[[1]])-1
     
@@ -594,11 +598,11 @@ cor_coxph_coef_1 = function(
   
   
   ###################################################################################################
-  # multivariate_assays models
+  # models containing multiple assay markers 
   
-  if (!is.null(config$multivariate_assays)) {
+  # multivariate_assays
+  if (!is.null(config[["multivariate_assays"]])) { # need to use [[]] prevents partial name matching since multivariate_assays may be a config key as well
     if(verbose) cat("Multiple regression\n")
-    
     for (a in config$multivariate_assays) {
       for (i in 1:2) {
         # 1: per SD; 2: per 10-fold
@@ -642,13 +646,55 @@ cor_coxph_coef_1 = function(
   }
   
   
+  # multivariate_assays_2
+  if (!is.null(config$multivariate_assays_2)) { 
+    if(verbose) cat("multivariate_assays_2\n")
+    out=NULL
+    for (a in config$multivariate_assays_2) {
+        f = update(form.0, as.formula(a))
+        if (tps) {
+          fit=svycoxph(f, design=design_or_dat) 
+        } else {
+          fit=coxph(f, dat) 
+        }
+        var.ind=(p.cov+1):len(coef(fit))
+        
+        fits=list(fit)
+        est=getFormattedSummary(fits, exp=T, robust=tps, rows=var.ind, type=1)
+        ci= getFormattedSummary(fits, exp=T, robust=tps, rows=var.ind, type=7)
+        est = paste0(est, " ", ci)
+        p=  getFormattedSummary(fits, exp=T, robust=tps, rows=var.ind, type=10)
+        
+        #generalized Wald test for whether the set of markers has any correlation (rejecting the complete null)
+        stat=coef(fit)[var.ind] %*% solve(vcov(fit)[var.ind,var.ind]) %*% coef(fit)[var.ind] 
+        p.gwald=pchisq(stat, length(var.ind), lower.tail = FALSE)
+        
+        tab=cbind(est, p); colnames(tab)=c(paste0("HR"), "P value"); tab
+        
+        # add overall P value
+        tab=cbind(tab, "Overall P value"=c(formatPvalues(p.gwald,3), rep("", nrow(tab)-1))); tab
+        
+        # add variable names column from rownames
+        tab=cbind(Variables=rownames(tab) ,tab)
+        
+        # add model number
+        out=rbind(out, cbind(Model=c(match(a, config$multivariate_assays_2), rep("", nrow(tab)-1)), tab))
+        
+        ## better row names
+        # tmp=match(aa, colnames(labels.axis))
+        # tmp[is.na(tmp)]=1 # otherwise, labels.axis["Day"%.%tpeak, tmp] would throw an error when tmp is NA
+        # rownames(tab)=ifelse(aa %in% colnames(labels.axis), labels.axis["Day"%.%tpeak, tmp], aa)
+        
+    }
+    
+    mytex(out, file.name=paste0("CoR_multivariate_assays_2_svycoxph_pretty_", fname.suffix),  include.colnames = T, save2input.only=T, 
+          input.foldername=save.results.to, include.rownames = F, align=c("c","l","c","c","c"))
+  }
   
-  ###################################################################################################
+  
   # additional_models
-  
   if (!is.null(config$additional_models)) {
     if(verbose) cat("Additional models\n")
-    
     for (a in config$additional_models) {
       tmp=gsub("tpeak",tpeak,a)
       f= update(Surv(EventTimePrimary, EventIndPrimary) ~1, as.formula(paste0("~.+", tmp)))
@@ -673,7 +719,6 @@ cor_coxph_coef_1 = function(
     }
     
   }
-  
   
   if (attr(config,"config")=="janssen_pooled_EUA") {
     f=Surv(EventTimePrimary, EventIndPrimary) ~ risk_score + as.factor(Region) * Day29pseudoneutid50    
@@ -705,9 +750,7 @@ cor_coxph_coef_1 = function(
   }
   
   
-  ###################################################################################################
   # interaction_models
-  
   if (!is.null(config$interaction)) {
     if(verbose) cat("Interaction models Cox models\n")    
     itxn.pvals=c()      
