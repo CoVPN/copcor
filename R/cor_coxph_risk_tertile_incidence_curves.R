@@ -328,7 +328,10 @@ if(has.plac) {
 lwd=2
 ylim=c(0,
        max(
-         max(sapply(markers, function(a) max(risks.all.ter[[a]]$risk [risks.all.ter[[a]]$time<=tfinal.tpeak,]))),
+         max(sapply(markers, function(a) {
+                                if (is.na(risks.all.ter[[a]])) NA else max(risks.all.ter[[a]]$risk [risks.all.ter[[a]]$time<=tfinal.tpeak,])
+                              }
+                    ), na.rm=T),
          if(has.plac) risk.0)
        )
 
@@ -370,7 +373,7 @@ if (file.exists(paste0(save.results.to, "svycoxph_cat_overall_pvalues_",fname.su
 
 # make plot for one marker at a time till the end of tertile incidence curves
 for (a in markers) {        
-  
+
   mypdf(oma=c(1,0,0,0), onefile=F, file=paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix), mfrow=.mfrow, mar=c(12,4,5,2))
   par(las=1, cex.axis=0.9, cex.lab=1)# axis label 
   
@@ -436,25 +439,34 @@ for (a in markers) {
   }
   
   # save source data for images per some journals' requirements
-  img.dat=cbind(out$time[out$time<=tfinal.tpeak], out$risk[out$time<=tfinal.tpeak,])
-  rownames(img.dat)=img.dat[,1]
-  # write a file for caption
-  write(paste0(concatList(formatDouble(
-    c(img.dat[nrow(img.dat),-1], if(has.plac) max(risk.0, na.rm=T))
-    , 6), ", "), "%"), 
-        file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix, ".txt"))
-  if(has.plac) {
-    tmp=cbind(time.0, risk.0)
-    tmp=tmp[order (tmp[,1]),]
-    tmp=unique(tmp)    
-    rownames(tmp)=tmp[,1]
-    # combine 
-    img.dat=cbinduneven(list(img.dat, tmp))
-  }
-  # sort
-  img.dat=img.dat[order(img.dat[,1]),]
-  mywrite.csv(img.dat, paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix))
+  if (!is.na(out)) {
+    img.dat=cbind(out$time[out$time<=tfinal.tpeak], out$risk[out$time<=tfinal.tpeak,])
+    rownames(img.dat)=img.dat[,1]
+    
+    # write a file for caption
+    write(paste0(concatList(formatDouble(
+      c(img.dat[nrow(img.dat),-1], if(has.plac) max(risk.0, na.rm=T))
+      , 6), ", "), "%"), 
+          file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix, ".txt"))
+    
+    if(has.plac) {
+      tmp=cbind(time.0, risk.0)
+      tmp=tmp[order (tmp[,1]),]
+      tmp=unique(tmp)    
+      rownames(tmp)=tmp[,1]
+      # combine 
+      img.dat=cbinduneven(list(img.dat, tmp))
+    }
+    # sort
+    img.dat=img.dat[order(img.dat[,1]),]
+    mywrite.csv(img.dat, paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix))
   
+  } else {
+    # write an empty file for caption
+    write("", 
+      file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix, ".txt"))
+    
+  }
   
   # add data ribbon
   

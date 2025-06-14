@@ -82,6 +82,7 @@ get.marginalized.risk.no.marker=function(formula, dat.ph1, followup.day){
 }
 
 
+# ph2.col.name should specify the ph2 column, but if it specifies the ph1 column, it will still return values b/c wt.quantile ignores NA
 # return a character column not a factor column, because different subpopulations may be cut at different steps
 add.trichotomized.markers=function(dat, markers, ph2.col.name="ph2", wt.col.name="wt", verbose=F) {
   

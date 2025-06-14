@@ -42,8 +42,7 @@ cor_coxph_coef_1 = function(
   if (tps) dat = design_or_dat$phase1$full$variables else dat=design_or_dat
   
   tpeak=config.cor$tpeak
-  
-  myprint(fname.suffix, show.q, tps, has.plac, verbose)
+  myprint(show.q, tps, has.plac, verbose)
   
   
   ###################################################################################################
@@ -222,10 +221,10 @@ cor_coxph_coef_1 = function(
     for (a in markers) {
       if(verbose>=2) myprint(a)
       f = update(form.0, as.formula(paste0("~.+", a, "cat")))
-      if (tps) {
-        fits.tri[[a]]=svycoxph(f, design=design_or_dat) 
+      fits.tri[[a]] = if (tps) {
+        svycoxph(f, design=design_or_dat) 
       } else {
-        fits.tri[[a]]=coxph(f, design_or_dat) 
+        coxph(f, design_or_dat) 
       }
     }
     fits.tri=fits.tri
@@ -242,7 +241,7 @@ cor_coxph_coef_1 = function(
     
     overall.p.tri=sapply(fits.tri, function(fit) {
       rows = (1+p.cov):length(coef(fit))
-      if (length(fit)==1) NA else {
+      if (length(fit)==1 | any(is.na(coef(fit)))) NA else {
         stat=coef(fit)[rows] %*% solve(vcov(fit,robust=tps)[rows,rows]) %*% coef(fit)[rows]
         pchisq(stat, length(rows), lower.tail = FALSE)
       }
