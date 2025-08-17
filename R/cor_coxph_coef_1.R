@@ -27,7 +27,9 @@ cor_coxph_coef_1 = function(
   run.trichtom=TRUE,
   
   cmp.label = "Placebo",
-  verbose=FALSE
+  verbose=FALSE,
+  
+  p.digits=3
   
 ) {
   
@@ -103,6 +105,11 @@ cor_coxph_coef_1 = function(
     kp = !grepl("FS", markers)
     est[kp] = est1[kp]
     ci[kp] = ci1[kp]
+  
+  } else if (TRIAL=="covail_frnt") {
+    # make p values with more digits
+    p=  getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=10, p.digits=6)
+    
   }
   
   pvals.cont = sapply(fits, function(x) {
@@ -521,6 +528,16 @@ cor_coxph_coef_1 = function(
       c("N/A", getFormattedSummary(list(fits.tri[[a]]), exp=T, robust=tps, rows=p.cov+1:(marker.levels[[a]]-1), type=10)) 
     }
   ))
+  
+  # special treatment
+  if (TRIAL=="covail_frnt") {
+    # make p values with more digits
+      p=  unlist(lapply(markers, function (a) 
+        if(length(fits.tri[[a]])==1) rep(NA,marker.levels[[a]]) else {
+          c("N/A", getFormattedSummary(list(fits.tri[[a]]), exp=T, robust=tps, rows=p.cov+1:(marker.levels[[a]]-1), type=10, p.digits=6)) 
+        }
+      ))
+  }
   
   
   tab=cbind(
