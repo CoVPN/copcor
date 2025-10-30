@@ -223,8 +223,8 @@ marginalized.risk.svycoxph.boot=function(form.0, marker.name, type, data, t, B, 
   
   seeds=1:B; names(seeds)=seeds
 
-  out=lapply(seeds, function(seed) {   
-  # out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {   
+  # out=lapply(seeds, function(seed) {   
+  out=mclapply(seeds, mc.cores = numCores, FUN=function(seed) {
     seed=seed+560
     if (verbose>=2) myprint(seed)
     
