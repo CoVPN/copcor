@@ -1,4 +1,4 @@
-myboxplot3=function(dat, marker, timepoints=c("B","Day15","Delta15overB"), case_var, trt_var="Trt", case_label="Cases"){
+myboxplots3=function(dat, marker, timepoints=c("B","Day15","Delta15overB"), case_var, trt_var="Trt", case_label="Cases"){
   
   ylim =range(dat[[glue("{timepoints[1]}{marker}")]], dat[[glue("{timepoints[2]}{marker}")]])
   ylim1=range(dat[[glue("{timepoints[3]}{marker}")]])
