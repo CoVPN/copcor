@@ -1,3 +1,39 @@
+myboxplot3=function(dat, marker, timepoints=c("B","Day15","Delta15overB"), case_var, trt_var="Trt", case_label="Cases"){
+  
+  ylim =range(dat[[glue("{timepoints[1]}{marker}")]], dat[[glue("{timepoints[2]}{marker}")]])
+  ylim1=range(dat[[glue("{timepoints[3]}{marker}")]])
+  # make ylim1 and ylim have the same span by shifting ylim1
+  ylim1 = ylim + (ylim1[1] - ylim[1])
+  ylims=list(ylim, ylim, ylim1)
+  
+  # add_sig_bar <- function(x1, x2, ylim, offset=0.05, lwd=2, cex=1.5) {
+  #   x1=x1+0.1
+  #   x2=x2-0.1
+  #   y=ylim[2]-diff(ylim)/20
+  #   segments(x1, y, x2, y, lwd=lwd)
+  #   segments(x1, y, x1, y - offset, lwd=lwd)
+  #   segments(x2, y, x2, y - offset, lwd=lwd)
+  #   text(mean(c(x1, x2)), y + offset, 
+  #        labels = "*", cex=cex)
+  # }
+  
+  trt_levels = unique(dat[[trt_var]])
+  
+  for (i in 1:3) {
+    myboxplot(as.formula(glue("{timepoints[i]}{marker}~{case_var} + {trt_var}")), 
+              dat, cex=1, col="white", ylab="", 
+              col.points = ifelse(dat[[case_var]]==1, 2, 4), 
+              ylim=ylims[[i]], 
+              pch=ifelse(dat[[trt_var]]==trt_levels[1], 1, 2),
+              names=rep(c("Non-"%.%case_label, case_label), 2), 
+              main=glue("{timepoints[i]} {marker}"))
+    axis(1, at=c(1.5, 3.5), labels=trt_levels, line=2, col="white")
+    # add_sig_bar(1, 2, ylim)
+  }
+  
+}
+
+
 draw.x.axis.cor=function(xlim, llox, llox.label, for.ggplot=FALSE){
   
   xx=seq(ceiling(xlim[1]), floor(xlim[2]))
