@@ -329,9 +329,16 @@ lwd=2
 ylim=c(0,
        max(
          max(sapply(markers, function(a) {
-                                if (is.na(risks.all.ter[[a]])) NA else max(risks.all.ter[[a]]$risk [risks.all.ter[[a]]$time<=tfinal.tpeak,])
-                              }
-                    ), na.rm=T),
+           tmp = risks.all.ter[[a]]
+           if (is.null(tmp) || (length(tmp) == 1 && is.na(tmp))) {
+             # tmp is NA
+             NA
+           } else {
+             # tmp is a list
+             max(tmp$risk[tmp$time<=tfinal.tpeak,])
+           }
+         }
+       ), na.rm=T),
          if(has.plac) risk.0)
        )
 
@@ -439,7 +446,13 @@ for (a in markers) {
   }
   
   # save source data for images per some journals' requirements
-  if (!is.na(out)) {
+  if (is.null(out) || (length(out) == 1 && is.na(out))) {
+    # out is NA
+    # write an empty file for caption
+    write("", 
+          file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix, ".txt"))
+    
+  } else {
     img.dat=cbind(out$time[out$time<=tfinal.tpeak], out$risk[out$time<=tfinal.tpeak,])
     rownames(img.dat)=img.dat[,1]
     
@@ -461,11 +474,6 @@ for (a in markers) {
     img.dat=img.dat[order(img.dat[,1]),]
     mywrite.csv(img.dat, paste0(save.results.to, a, "_marginalized_risks_cat_", fname.suffix))
   
-  } else {
-    # write an empty file for caption
-    write("", 
-      file=paste0(save.results.to, a, "_tertile_incidences_", fname.suffix, ".txt"))
-    
   }
   
   # add data ribbon
