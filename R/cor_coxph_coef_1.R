@@ -543,7 +543,7 @@ cor_coxph_coef_1 = function(
   
   tab=cbind(
     unlist(lapply(markers, function (a) c("Lower", if (marker.levels[a]==3) "Middle", "Upper"))),
-    paste0(nevents, "/", format(natrisk, big.mark=",",digit=0, scientific=F)),
+    paste0(nevents, "/", formatC(natrisk, format = "d", big.mark = ",")),
     formatDouble(nevents/natrisk, digits=4, remove.leading0=F),
     est, ci, p, 
     overall.p.0, if(show.q) overall.p.2, if(show.q) overall.p.1
@@ -605,7 +605,7 @@ cor_coxph_coef_1 = function(
   
   tab.nop12=cbind(
     unlist(lapply(markers, function (a) c("Lower", if (marker.levels[a]==3) "Middle", "Upper"))),
-    paste0(nevents, "/", format(natrisk, big.mark=",",digit=0, scientific=F)), 
+    paste0(nevents, "/", formatC(natrisk, format = "d", big.mark = ",")), 
     formatDouble(nevents/natrisk, digits=4, remove.leading0=F),
     est, ci, p, overall.p.0
   )
