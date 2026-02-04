@@ -467,8 +467,10 @@ for (a in markers) {
       tmp=tmp[order (tmp[,1]),]
       tmp=unique(tmp)    
       rownames(tmp)=tmp[,1]
-      # combine 
-      img.dat=cbinduneven(list(img.dat, tmp))
+      
+      # comment out next line b/c img.dat made from predict using curve type has more rows in tmp
+      # next line generates an error about duplicate row names
+      # img.dat=cbinduneven(list(img.dat, tmp)) # combine 
     }
     # sort
     img.dat=img.dat[order(img.dat[,1]),]
