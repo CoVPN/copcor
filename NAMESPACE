@@ -44,7 +44,6 @@ import(methods)
 import(graphics)
 import(grDevices)
 import(parallel)
-import(forestplot)
 
 
 
