@@ -161,6 +161,8 @@ theforestplot <- function(cohort=NA,group,nEvents=NA,totFU=NA,rate=NA,point.esti
                           xlog=FALSE,
                           ...){
   
+  require(forestplot)
+  
   plotdata <- structure(
     list(
       mean  = c(NA, point.estimates),
