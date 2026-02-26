@@ -33,7 +33,7 @@ cor_coxph_coef_1 = function(
   
 ) {
   
-  if(verbose) cat("Running cor_coxph_coef_1\n")
+  if(verbose) cat("\nRunning cor_coxph_coef_1\n")
   
   if (is.null(forestplot.markers)) forestplot.markers = list(1:length(markers))
   

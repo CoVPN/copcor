@@ -1,7 +1,7 @@
 Package: copcor
 LazyLoad: yes
-Version: 2026.01-20
-Date: 2026-01-20
+Version: 2026.2-26
+Date: 2026-02-26
 Title: Correlates of Protection and Correlates of Risk Functions
 Authors@R: c(person("Youyi", "Fong", role = "cre", email = "youyifong@gmail.com"), person("Yiwen", "He", role = "aut", email = "ylu2@scharp.org"), person("Chenchen", "Yu", role = "aut", email = "cyu@scharp.org"), person("Bhavesh", "Borate", role = "aut", email = "bborate@scharp.org"), person("Peter", "Gilbert", role = "aut", email = "pgilbert@fredhutch.org"))
 Depends: R (>= 3.6), kyotil
