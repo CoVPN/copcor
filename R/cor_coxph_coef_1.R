@@ -137,7 +137,7 @@ cor_coxph_coef_1 = function(
     
     # special case
     if (TRIAL=="covail_tcell" & i==1) {
-      # per 1% increase for functionality scores
+      # per 1% increase for functionality scores. 0.01 seems wrong, should be log10(1.01)
       res1=getFormattedSummary(if (i==1) fits else fits.scaled, exp=F, robust=tps, rows=rows, type=0, scale.factor=0.01)
       kp = grepl("FS", markers)
       res[1:4, kp] = res1[1:4, kp]
@@ -421,15 +421,22 @@ cor_coxph_coef_1 = function(
   rownames(tab.1)=markers.names.short
   tab.1
   
+  fold.str='10'
+  if (TRIAL %in% c("covail_tcell")) {
+    fold.str='1.01 (FS) or 3 (otherwise)'
+  } else if (TRIAL %in% c("cov2008_tcell")) {
+    fold.str='3'
+  }
+  
   if (show.q) {
     header=paste0("\\hline\n 
-         \\multicolumn{1}{l}{} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL%in%c("covail_tcell","cov2008_tcell"), "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}   & \\multicolumn{1}{c}{q-value}   & \\multicolumn{1}{c}{FWER} \\\\ 
+         \\multicolumn{1}{l}{} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR per ", fold.str, "-fold incr.}                     & \\multicolumn{1}{c}{P-value}   & \\multicolumn{1}{c}{q-value}   & \\multicolumn{1}{c}{FWER} \\\\ 
          \\multicolumn{1}{l}{Immunologic Marker}            & \\multicolumn{1}{c}{No. at-risk**} & \\multicolumn{1}{c}{Pt. Est.} & \\multicolumn{1}{c}{95\\% CI} & \\multicolumn{1}{c}{} & \\multicolumn{1}{c}{***} & \\multicolumn{1}{c}{} \\\\ 
          \\hline\n 
     ")
   } else {
     header=paste0("\\hline\n 
-         \\multicolumn{1}{l}{} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR", ifelse(TRIAL%in%c("covail_tcell","cov2008_tcell"), "", " per 10-fold incr."), "}                     & \\multicolumn{1}{c}{P-value}    \\\\ 
+         \\multicolumn{1}{l}{} & \\multicolumn{1}{c}{No. cases /}   & \\multicolumn{2}{c}{HR per ", fold.str, "-fold incr.}                     & \\multicolumn{1}{c}{P-value}    \\\\ 
          \\multicolumn{1}{l}{Immunologic Marker}            & \\multicolumn{1}{c}{No. at-risk**} & \\multicolumn{1}{c}{Pt. Est.} & \\multicolumn{1}{c}{95\\% CI} & \\multicolumn{1}{c}{}  \\\\ 
          \\hline\n 
     ")
@@ -441,7 +448,7 @@ cor_coxph_coef_1 = function(
         label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
         caption.placement = "top", 
         caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, 
-                       " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL%in%c("covail_tcell","cov2008_tcell"), "", " per 10-fold increment in the marker"), 
+                       " in the ", escape(fname.suffix), " group: Hazard ratios per ", fold.str, "-fold increment in the marker"), 
                        ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")),
                        ", endpoint variable: ", escape(config.cor$EventIndPrimary), ".")
   )
@@ -452,7 +459,7 @@ cor_coxph_coef_1 = function(
   #       longtable=T, 
   #       label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
   #       caption.placement = "top", 
-  #       caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios", ifelse(TRIAL%in%c("covail_tcell","cov2008_tcell"), "", " per 10-fold increment in the marker"), ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) ),
+  #       caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, " in the ", escape(fname.suffix), " group: Hazard ratios per ", fold.str, "-fold increment in the marker. Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")) ),
   #       include.rownames = F, 
   #       col.headers=sub("\\\\multicolumn\\{1\\}\\{l\\}\\{Immunologic Marker\\}\\s*&\\s*", "", sub("\\\\multicolumn\\{1\\}\\{l\\}\\{\\} & ", "", header))
   # )
