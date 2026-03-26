@@ -105,7 +105,14 @@ cor_coxph_coef_1 = function(
     kp = !grepl("FS", markers)
     est[kp] = est1[kp]
     ci[kp] = ci1[kp]
-  
+    
+  } else   if (TRIAL=="cov2008_tcell") {
+    # there are no functionality scores
+    
+    # per 3-fold increase for individual markers
+    est=getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=1, scale.factor=log10(3))
+    ci= getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=7, scale.factor=log10(3))
+
   } else if (TRIAL=="covail_frnt") {
     # make p values with more digits
     p=  getFormattedSummary(fits, exp=T, robust=tps, rows=rows, type=10, p.digits=6)
