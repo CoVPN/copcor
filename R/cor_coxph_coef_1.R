@@ -448,7 +448,7 @@ cor_coxph_coef_1 = function(
         label=paste0("tab:CoR_univariable_svycoxph_pretty"), 
         caption.placement = "top", 
         caption=paste0("Inference for Day ", tpeak, " antibody marker covariate-adjusted correlates of risk of ", config.cor$txt.endpoint, 
-                       " in the ", escape(fname.suffix), " group: Hazard ratios per ", fold.str, "-fold increment in the marker"), 
+                       " in the ", escape(fname.suffix), " group: Hazard ratios per ", fold.str, "-fold increment in the marker", 
                        ". Baseline covariates adjusted for: ", escape(paste(deparse(form.0[[3]]), collapse = " ")),
                        ", endpoint variable: ", escape(config.cor$EventIndPrimary), ".")
   )
